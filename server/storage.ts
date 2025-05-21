@@ -6,6 +6,7 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { randomBytes, createHash } from "crypto";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -42,13 +43,17 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000, // 24 hours
     });
     
-    // Add a default admin user
-    this.createUser({
+    // Create the admin user with simpler hashing
+    const admin: User = {
+      id: this.currentId++,
       username: "admin",
-      password: "admin123" // In a real app, this would be hashed
-    }).then(admin => {
-      console.log("Created default admin user");
-    });
+      password: createHash("sha256").update("admin123").digest("hex"),
+      role: "admin",
+      createdAt: new Date()
+    };
+    
+    this.users.set(admin.id, admin);
+    console.log("Created default admin user");
   }
 
   // User methods
