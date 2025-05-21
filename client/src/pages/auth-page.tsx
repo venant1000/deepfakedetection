@@ -1,77 +1,65 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema, InsertUser } from "@shared/schema";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
-import { FaGoogle, FaGithub } from "react-icons/fa";
 import Navigation from "@/components/layout/navigation";
-
-type AuthTab = "login" | "register";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [, navigate] = useLocation();
-  const [authTab, setAuthTab] = useState<AuthTab>("login");
-
+  const [authTab, setAuthTab] = useState("login");
+  
+  // Form state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [formError, setFormError] = useState("");
+  
   // Redirect to dashboard if already logged in
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
     }
   }, [user, navigate]);
-
-  const loginSchema = z.object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    rememberMe: z.boolean().optional(),
-  });
-
-  const registerSchema = insertUserSchema.extend({
-    confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
-
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      rememberMe: false,
-    },
-  });
-
-  const registerForm = useForm<z.infer<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-
-  const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
-    const { username, password } = values;
+  
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    setFormError("");
+    
+    if (username.length < 3) {
+      setFormError("Username must be at least 3 characters");
+      return;
+    }
+    
+    if (password.length < 6) {
+      setFormError("Password must be at least 6 characters");
+      return;
+    }
+    
     loginMutation.mutate({ username, password });
   };
-
-  const onRegisterSubmit = (values: z.infer<typeof registerSchema>) => {
-    const { username, password } = values;
+  
+  const handleRegisterSubmit = (e) => {
+    e.preventDefault();
+    setFormError("");
+    
+    if (username.length < 3) {
+      setFormError("Username must be at least 3 characters");
+      return;
+    }
+    
+    if (password.length < 6) {
+      setFormError("Password must be at least 6 characters");
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setFormError("Passwords don't match");
+      return;
+    }
+    
     registerMutation.mutate({ username, password });
   };
 
@@ -100,197 +88,174 @@ export default function AuthPage() {
               <div className="flex items-center mb-6">
                 <div className="flex-grow h-px bg-muted"></div>
                 <span className="px-4 text-sm text-muted-foreground">
-                  Login with username and password
+                  {authTab === "login" ? "Login with your credentials" : "Create your account"}
                 </span>
                 <div className="flex-grow h-px bg-muted"></div>
               </div>
             </div>
 
+            {formError && (
+              <div className="bg-destructive/10 text-destructive p-3 rounded-md mb-4 text-sm">
+                {formError}
+              </div>
+            )}
+
             {authTab === "login" ? (
-              <Form {...loginForm}>
-                <form
-                  onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-                  className="space-y-5"
-                >
-                  <FormField
-                    control={loginForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Username</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            className="glass-dark border-muted"
-                            placeholder="Enter your username"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              <form onSubmit={handleLoginSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <label htmlFor="username" className="block text-sm font-medium">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary"
+                    placeholder="Enter your username"
                   />
+                </div>
 
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex justify-between mb-2">
-                          <FormLabel>Password</FormLabel>
-                          <a
-                            href="#forgot-password"
-                            className="text-sm text-primary hover:underline"
-                          >
-                            Forgot?
-                          </a>
-                        </div>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            className="glass-dark border-muted"
-                            placeholder="Enter your password"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={loginForm.control}
-                    name="rememberMe"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormLabel className="text-sm font-normal cursor-pointer">
-                          Remember me
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    className="w-full py-6 bg-gradient-to-r from-primary to-secondary text-black font-semibold hover:opacity-90 transition-all"
-                    disabled={loginMutation.isPending}
-                  >
-                    {loginMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
-                    ) : (
-                      "Log In"
-                    )}
-                  </Button>
-
-                  <p className="text-center text-sm text-muted-foreground">
-                    Don't have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setAuthTab("register")}
-                      className="text-primary hover:underline"
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <label htmlFor="password" className="block text-sm font-medium">
+                      Password
+                    </label>
+                    <a
+                      href="#forgot-password"
+                      className="text-sm text-primary hover:underline"
                     >
-                      Sign up
-                    </button>
-                  </p>
-                </form>
-              </Form>
+                      Forgot?
+                    </a>
+                  </div>
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary"
+                    placeholder="Enter your password"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label
+                    htmlFor="rememberMe"
+                    className="ml-2 block text-sm text-muted-foreground"
+                  >
+                    Remember me
+                  </label>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full py-6 bg-gradient-to-r from-primary to-secondary text-black font-semibold hover:opacity-90 transition-all"
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in...
+                    </>
+                  ) : (
+                    "Log In"
+                  )}
+                </Button>
+
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthTab("register");
+                      setFormError("");
+                    }}
+                    className="text-primary hover:underline"
+                  >
+                    Sign up
+                  </button>
+                </p>
+              </form>
             ) : (
-              <Form {...registerForm}>
-                <form
-                  onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
-                  className="space-y-5"
+              <form onSubmit={handleRegisterSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <label htmlFor="reg-username" className="block text-sm font-medium">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    id="reg-username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary"
+                    placeholder="Choose a username"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="reg-password" className="block text-sm font-medium">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="reg-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary"
+                    placeholder="Create a password"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="confirm-password" className="block text-sm font-medium">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    id="confirm-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary"
+                    placeholder="Confirm your password"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full py-6 bg-gradient-to-r from-primary to-secondary text-black font-semibold hover:opacity-90 transition-all"
+                  disabled={registerMutation.isPending}
                 >
-                  <FormField
-                    control={registerForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Username</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            className="glass-dark border-muted"
-                            placeholder="Choose a username"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {registerMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
 
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            className="glass-dark border-muted"
-                            placeholder="Create a password"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={registerForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            className="glass-dark border-muted"
-                            placeholder="Confirm your password"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    className="w-full py-6 bg-gradient-to-r from-primary to-secondary text-black font-semibold hover:opacity-90 transition-all"
-                    disabled={registerMutation.isPending}
+                <p className="text-center text-sm text-muted-foreground">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthTab("login");
+                      setFormError("");
+                    }}
+                    className="text-primary hover:underline"
                   >
-                    {registerMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-
-                  <p className="text-center text-sm text-muted-foreground">
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setAuthTab("login")}
-                      className="text-primary hover:underline"
-                    >
-                      Log in
-                    </button>
-                  </p>
-                </form>
-              </Form>
+                    Log in
+                  </button>
+                </p>
+              </form>
             )}
           </div>
 
