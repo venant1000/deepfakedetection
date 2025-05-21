@@ -1,18 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -21,474 +11,626 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 
 export default function AdminSettingsPage() {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   
-  const [systemSettings, setSystemSettings] = useState({
-    maxVideoSize: 100,
-    maxVideoDuration: 5,
-    dailyUploadLimit: 10,
-    concurrentAnalysis: 5,
-    analysisTimeout: 15,
-    enableModelTraining: true,
-    autoDeleteAnalysisAfterDays: 30,
-    maintenanceMode: false,
-    apiTimeout: 60,
-    userRegistrationType: "open",
-    securityLevel: "high",
-    adminApprovalRequired: false,
-    debugLogging: false,
-    storageType: "local"
+  // Mock settings - would be replaced with actual API data
+  const [generalSettings, setGeneralSettings] = useState({
+    siteName: "DeepFake Detector",
+    maxFileSize: 100,
+    allowedFileTypes: ["mp4", "mov", "avi"],
+    defaultLanguage: "en",
+    systemTheme: "dark",
+    enableUserRegistration: true,
+    requireEmailVerification: true,
+    maintenanceMode: false
   });
   
-  const handleSettingChange = (setting: string, value: any) => {
-    setSystemSettings(prev => ({
-      ...prev,
-      [setting]: value
-    }));
-    
-    toast({
-      title: "Setting updated",
-      description: "The system setting has been updated successfully.",
-    });
-  };
+  const [apiSettings, setApiSettings] = useState({
+    geminiApiEnabled: true,
+    apiThrottling: true,
+    requestsPerMinute: 60,
+    maxConcurrentRequests: 10,
+    apiTimeout: 30
+  });
+  
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    adminAlerts: true,
+    systemUpdates: true,
+    securityAlerts: true,
+    userReports: true
+  });
+  
+  const [securitySettings, setSecuritySettings] = useState({
+    twoFactorAuth: false,
+    passwordStrength: "medium",
+    sessionTimeout: 60,
+    ipWhitelist: [] as string[],
+    loginAttempts: 5
+  });
+
+  // Check if user is admin
+  useEffect(() => {
+    if (user && user.username !== "admin") {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page.",
+        variant: "destructive"
+      });
+      navigate("/dashboard");
+    }
+  }, [user, navigate, toast]);
 
   const handleSaveSettings = () => {
-    toast({
-      title: "Settings saved",
-      description: "All system settings have been saved successfully.",
-    });
-  };
-  
-  const updateSystem = () => {
-    // Simulate a system update
-    toast({
-      title: "System update initiated",
-      description: "The system update process has begun. This may take a few minutes.",
-    });
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      toast({
+        title: "Settings Saved",
+        description: "Your system settings have been updated successfully.",
+      });
+    }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar isAdmin={true} />
+    <div className="min-h-screen bg-background">
+      <Sidebar isAdmin />
       
-      <div className="flex-1 ml-20 md:ml-64 p-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <h1 className="text-3xl font-bold">System Settings</h1>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="outline" onClick={updateSystem}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-                Check for Updates
-              </Button>
-              
-              <Button onClick={handleSaveSettings}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save All Settings
-              </Button>
-            </div>
+      <div className="ml-20 md:ml-64 p-6 pt-8 min-h-screen">
+        {/* Admin Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold">System Settings</h1>
+            <p className="text-muted-foreground">Configure platform settings and preferences</p>
           </div>
           
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-3 md:grid-cols-none mb-8">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="security">Security & Privacy</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="general">
-              <div className="grid gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Upload Settings</CardTitle>
-                    <CardDescription>
-                      Configure video upload and analysis parameters
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="maxVideoSize">Maximum Video Size (MB)</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Set the maximum allowed file size for uploads
-                        </p>
-                      </div>
-                      <Input
-                        id="maxVideoSize"
-                        type="number"
-                        value={systemSettings.maxVideoSize}
-                        onChange={(e) => handleSettingChange("maxVideoSize", parseInt(e.target.value))}
-                        className="w-full md:w-[150px]"
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="maxVideoDuration">Maximum Video Duration (min)</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Maximum length of videos that can be analyzed
-                        </p>
-                      </div>
-                      <Input
-                        id="maxVideoDuration"
-                        type="number"
-                        value={systemSettings.maxVideoDuration}
-                        onChange={(e) => handleSettingChange("maxVideoDuration", parseInt(e.target.value))}
-                        className="w-full md:w-[150px]"
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="dailyUploadLimit">Daily Upload Limit (per user)</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Number of videos a user can upload daily
-                        </p>
-                      </div>
-                      <Input
-                        id="dailyUploadLimit"
-                        type="number"
-                        value={systemSettings.dailyUploadLimit}
-                        onChange={(e) => handleSettingChange("dailyUploadLimit", parseInt(e.target.value))}
-                        className="w-full md:w-[150px]"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+          <Button onClick={handleSaveSettings} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Settings Tabs */}
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="mb-6 w-full md:w-auto">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="api">API & Performance</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+          </TabsList>
+          
+          {/* General Settings Tab */}
+          <TabsContent value="general">
+            <Card>
+              <CardHeader>
+                <CardTitle>General Settings</CardTitle>
+                <CardDescription>
+                  Manage basic system configuration and appearance
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="siteName">Site Name</Label>
+                    <Input 
+                      id="siteName" 
+                      value={generalSettings.siteName}
+                      onChange={(e) => setGeneralSettings({...generalSettings, siteName: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="maxFileSize">Maximum File Size (MB)</Label>
+                    <Input 
+                      id="maxFileSize" 
+                      type="number"
+                      value={generalSettings.maxFileSize}
+                      onChange={(e) => setGeneralSettings({...generalSettings, maxFileSize: parseInt(e.target.value)})}
+                    />
+                  </div>
+                </div>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Analysis Engine</CardTitle>
-                    <CardDescription>
-                      Configure deepfake detection settings
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="concurrentAnalysis">Concurrent Analyses</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Maximum number of simultaneous analyses
-                        </p>
+                <div className="space-y-2">
+                  <Label htmlFor="allowedFileTypes">Allowed File Types</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {generalSettings.allowedFileTypes.map((type, index) => (
+                      <div key={index} className="flex items-center bg-muted rounded-md px-3 py-1">
+                        <span>{type}</span>
+                        <button 
+                          className="ml-2 text-muted-foreground hover:text-destructive"
+                          onClick={() => {
+                            const newTypes = [...generalSettings.allowedFileTypes];
+                            newTypes.splice(index, 1);
+                            setGeneralSettings({...generalSettings, allowedFileTypes: newTypes});
+                          }}
+                        >
+                          ×
+                        </button>
                       </div>
-                      <Input
-                        id="concurrentAnalysis"
-                        type="number"
-                        value={systemSettings.concurrentAnalysis}
-                        onChange={(e) => handleSettingChange("concurrentAnalysis", parseInt(e.target.value))}
-                        className="w-full md:w-[150px]"
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="analysisTimeout">Analysis Timeout (min)</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Maximum time before an analysis times out
-                        </p>
-                      </div>
-                      <Input
-                        id="analysisTimeout"
-                        type="number"
-                        value={systemSettings.analysisTimeout}
-                        onChange={(e) => handleSettingChange("analysisTimeout", parseInt(e.target.value))}
-                        className="w-full md:w-[150px]"
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">Enable Model Training</p>
-                        <p className="text-sm text-muted-foreground">
-                          Allow system to use uploaded videos for model improvement
-                        </p>
-                      </div>
-                      <Switch 
-                        checked={systemSettings.enableModelTraining} 
-                        onCheckedChange={(checked) => handleSettingChange("enableModelTraining", checked)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="security">
-              <div className="grid gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>User Authentication</CardTitle>
-                    <CardDescription>
-                      Configure user access and registration settings
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">User Registration</p>
-                        <p className="text-sm text-muted-foreground">
-                          Control how new users can register on the platform
-                        </p>
-                      </div>
-                      <Select 
-                        value={systemSettings.userRegistrationType} 
-                        onValueChange={(value) => handleSettingChange("userRegistrationType", value)}
-                      >
-                        <SelectTrigger className="w-full md:w-[200px]">
-                          <SelectValue placeholder="Registration type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="open">Open Registration</SelectItem>
-                          <SelectItem value="invite">Invite Only</SelectItem>
-                          <SelectItem value="closed">Closed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">Security Level</p>
-                        <p className="text-sm text-muted-foreground">
-                          Set password and account security requirements
-                        </p>
-                      </div>
-                      <Select 
-                        value={systemSettings.securityLevel} 
-                        onValueChange={(value) => handleSettingChange("securityLevel", value)}
-                      >
-                        <SelectTrigger className="w-full md:w-[200px]">
-                          <SelectValue placeholder="Security level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="maximum">Maximum</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">Admin Approval</p>
-                        <p className="text-sm text-muted-foreground">
-                          Require admin approval for new account registration
-                        </p>
-                      </div>
-                      <Switch 
-                        checked={systemSettings.adminApprovalRequired} 
-                        onCheckedChange={(checked) => handleSettingChange("adminApprovalRequired", checked)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                    ))}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const newType = prompt("Enter file extension (without dot)");
+                        if (newType && !generalSettings.allowedFileTypes.includes(newType)) {
+                          setGeneralSettings({
+                            ...generalSettings, 
+                            allowedFileTypes: [...generalSettings.allowedFileTypes, newType]
+                          });
+                        }
+                      }}
+                    >
+                      Add Type
+                    </Button>
+                  </div>
+                </div>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Privacy Settings</CardTitle>
-                    <CardDescription>
-                      Configure data retention and privacy options
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="autoDeleteAnalysis">Auto-Delete Analysis Data (days)</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Automatically remove analysis data after this period
-                        </p>
-                      </div>
-                      <Input
-                        id="autoDeleteAnalysis"
-                        type="number"
-                        value={systemSettings.autoDeleteAnalysisAfterDays}
-                        onChange={(e) => handleSettingChange("autoDeleteAnalysisAfterDays", parseInt(e.target.value))}
-                        className="w-full md:w-[150px]"
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">Video Storage Location</p>
-                        <p className="text-sm text-muted-foreground">
-                          Select where uploaded videos are stored
-                        </p>
-                      </div>
-                      <Select 
-                        value={systemSettings.storageType} 
-                        onValueChange={(value) => handleSettingChange("storageType", value)}
-                      >
-                        <SelectTrigger className="w-full md:w-[200px]">
-                          <SelectValue placeholder="Storage type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="local">Local Storage</SelectItem>
-                          <SelectItem value="cloud">Cloud Storage</SelectItem>
-                          <SelectItem value="distributed">Distributed Storage</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="advanced">
-              <div className="grid gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>System Maintenance</CardTitle>
-                    <CardDescription>
-                      Advanced system configuration options
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">Maintenance Mode</p>
-                        <p className="text-sm text-muted-foreground">
-                          Put the system in maintenance mode (users cannot access)
-                        </p>
-                      </div>
-                      <Switch 
-                        checked={systemSettings.maintenanceMode} 
-                        onCheckedChange={(checked) => handleSettingChange("maintenanceMode", checked)}
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="apiTimeout">API Timeout (seconds)</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Maximum time for API requests to complete
-                        </p>
-                      </div>
-                      <Input
-                        id="apiTimeout"
-                        type="number"
-                        value={systemSettings.apiTimeout}
-                        onChange={(e) => handleSettingChange("apiTimeout", parseInt(e.target.value))}
-                        className="w-full md:w-[150px]"
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">Debug Logging</p>
-                        <p className="text-sm text-muted-foreground">
-                          Enable verbose logging for system debugging
-                        </p>
-                      </div>
-                      <Switch 
-                        checked={systemSettings.debugLogging} 
-                        onCheckedChange={(checked) => handleSettingChange("debugLogging", checked)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="defaultLanguage">Default Language</Label>
+                    <Select 
+                      value={generalSettings.defaultLanguage}
+                      onValueChange={(value) => setGeneralSettings({...generalSettings, defaultLanguage: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                        <SelectItem value="fr">French</SelectItem>
+                        <SelectItem value="de">German</SelectItem>
+                        <SelectItem value="zh">Chinese</SelectItem>
+                        <SelectItem value="ja">Japanese</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="systemTheme">System Theme</Label>
+                    <Select 
+                      value={generalSettings.systemTheme}
+                      onValueChange={(value) => setGeneralSettings({...generalSettings, systemTheme: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="system">System Default</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Gemini API Configuration</CardTitle>
-                    <CardDescription>
-                      Configure settings for the Google Gemini API integration
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="apiKey">Gemini API Key</Label>
-                        <p className="text-sm text-muted-foreground">
-                          API key for connecting to Google's Gemini AI
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 w-full md:w-auto">
-                        <Input
-                          id="apiKey"
-                          type="password"
-                          value="••••••••••••••••••••••••••••••"
-                          className="w-full md:w-[250px]"
-                          readOnly
-                        />
-                        <Button variant="outline" size="sm">Update</Button>
-                      </div>
+                <Separator className="my-4" />
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="enableRegistration">Enable User Registration</Label>
+                      <p className="text-sm text-muted-foreground">Allow new users to register accounts</p>
                     </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <Label htmlFor="model">AI Model</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Select the Gemini model version to use
-                        </p>
-                      </div>
-                      <Select defaultValue="gemini-pro">
-                        <SelectTrigger className="w-full md:w-[200px]">
-                          <SelectValue placeholder="Select model" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
-                          <SelectItem value="gemini-ultra">Gemini Ultra</SelectItem>
-                          <SelectItem value="gemini-pro-vision">Gemini Pro Vision</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <Switch 
+                      id="enableRegistration" 
+                      checked={generalSettings.enableUserRegistration}
+                      onCheckedChange={(value) => setGeneralSettings({...generalSettings, enableUserRegistration: value})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="requireEmailVerification">Require Email Verification</Label>
+                      <p className="text-sm text-muted-foreground">Users must verify email before accessing features</p>
                     </div>
-                  </CardContent>
-                  <CardFooter className="border-t px-6 py-4">
-                    <div className="flex justify-between items-center w-full">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                        API Connected
+                    <Switch 
+                      id="requireEmailVerification" 
+                      checked={generalSettings.requireEmailVerification}
+                      onCheckedChange={(value) => setGeneralSettings({...generalSettings, requireEmailVerification: value})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="maintenanceMode" className="text-destructive font-medium">Maintenance Mode</Label>
+                      <p className="text-sm text-muted-foreground">Take the site offline for maintenance</p>
+                    </div>
+                    <Switch 
+                      id="maintenanceMode" 
+                      checked={generalSettings.maintenanceMode}
+                      onCheckedChange={(value) => setGeneralSettings({...generalSettings, maintenanceMode: value})}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* API Settings Tab */}
+          <TabsContent value="api">
+            <Card>
+              <CardHeader>
+                <CardTitle>API & Performance Settings</CardTitle>
+                <CardDescription>
+                  Configure API connections and system performance parameters
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="geminiApiEnabled">Google Gemini API</Label>
+                    <p className="text-sm text-muted-foreground">Enable connection to Google Gemini API</p>
+                  </div>
+                  <Switch 
+                    id="geminiApiEnabled" 
+                    checked={apiSettings.geminiApiEnabled}
+                    onCheckedChange={(value) => setApiSettings({...apiSettings, geminiApiEnabled: value})}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="apiThrottling">API Request Throttling</Label>
+                    <p className="text-sm text-muted-foreground">Limit rate of API requests to prevent overload</p>
+                  </div>
+                  <Switch 
+                    id="apiThrottling" 
+                    checked={apiSettings.apiThrottling}
+                    onCheckedChange={(value) => setApiSettings({...apiSettings, apiThrottling: value})}
+                  />
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="requestsPerMinute">Requests Per Minute: {apiSettings.requestsPerMinute}</Label>
+                      <span className="text-sm text-muted-foreground w-12 text-right">{apiSettings.requestsPerMinute}</span>
+                    </div>
+                    <Slider
+                      id="requestsPerMinute"
+                      min={10}
+                      max={200}
+                      step={5}
+                      value={[apiSettings.requestsPerMinute]}
+                      onValueChange={(value) => setApiSettings({...apiSettings, requestsPerMinute: value[0]})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="maxConcurrentRequests">Max Concurrent Requests: {apiSettings.maxConcurrentRequests}</Label>
+                      <span className="text-sm text-muted-foreground w-12 text-right">{apiSettings.maxConcurrentRequests}</span>
+                    </div>
+                    <Slider
+                      id="maxConcurrentRequests"
+                      min={1}
+                      max={50}
+                      step={1}
+                      value={[apiSettings.maxConcurrentRequests]}
+                      onValueChange={(value) => setApiSettings({...apiSettings, maxConcurrentRequests: value[0]})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="apiTimeout">API Timeout (seconds): {apiSettings.apiTimeout}</Label>
+                      <span className="text-sm text-muted-foreground w-12 text-right">{apiSettings.apiTimeout}</span>
+                    </div>
+                    <Slider
+                      id="apiTimeout"
+                      min={5}
+                      max={120}
+                      step={5}
+                      value={[apiSettings.apiTimeout]}
+                      onValueChange={(value) => setApiSettings({...apiSettings, apiTimeout: value[0]})}
+                    />
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <Button variant="outline">
+                    Test API Connection
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Notification Settings Tab */}
+          <TabsContent value="notifications">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Settings</CardTitle>
+                <CardDescription>
+                  Configure system notifications and alerts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="emailNotifications">Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">Send important notifications via email</p>
+                    </div>
+                    <Switch 
+                      id="emailNotifications" 
+                      checked={notificationSettings.emailNotifications}
+                      onCheckedChange={(value) => setNotificationSettings({...notificationSettings, emailNotifications: value})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="adminAlerts">Admin Alerts</Label>
+                      <p className="text-sm text-muted-foreground">Notify administrators about critical events</p>
+                    </div>
+                    <Switch 
+                      id="adminAlerts" 
+                      checked={notificationSettings.adminAlerts}
+                      onCheckedChange={(value) => setNotificationSettings({...notificationSettings, adminAlerts: value})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="systemUpdates">System Update Notifications</Label>
+                      <p className="text-sm text-muted-foreground">Notify about available system updates</p>
+                    </div>
+                    <Switch 
+                      id="systemUpdates" 
+                      checked={notificationSettings.systemUpdates}
+                      onCheckedChange={(value) => setNotificationSettings({...notificationSettings, systemUpdates: value})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="securityAlerts">Security Alerts</Label>
+                      <p className="text-sm text-muted-foreground">Notify about security events and issues</p>
+                    </div>
+                    <Switch 
+                      id="securityAlerts" 
+                      checked={notificationSettings.securityAlerts}
+                      onCheckedChange={(value) => setNotificationSettings({...notificationSettings, securityAlerts: value})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="userReports">User Reports</Label>
+                      <p className="text-sm text-muted-foreground">Notify about user-submitted reports</p>
+                    </div>
+                    <Switch 
+                      id="userReports" 
+                      checked={notificationSettings.userReports}
+                      onCheckedChange={(value) => setNotificationSettings({...notificationSettings, userReports: value})}
+                    />
+                  </div>
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="emailServer">Email Server Settings</Label>
+                  <Card className="border border-muted">
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="smtpServer">SMTP Server</Label>
+                          <Input id="smtpServer" placeholder="smtp.example.com" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="smtpPort">SMTP Port</Label>
+                          <Input id="smtpPort" placeholder="587" />
+                        </div>
                       </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="smtpUsername">SMTP Username</Label>
+                          <Input id="smtpUsername" placeholder="user@example.com" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="smtpPassword">SMTP Password</Label>
+                          <Input id="smtpPassword" type="password" placeholder="••••••••" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="useTLS">Use TLS/SSL</Label>
+                        </div>
+                        <Switch id="useTLS" defaultChecked={true} />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between border-t bg-muted/50 px-6 py-3">
                       <Button variant="outline" size="sm">
                         Test Connection
                       </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
+                      <Button size="sm">
+                        Save Email Settings
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Security Settings Tab */}
+          <TabsContent value="security">
+            <Card>
+              <CardHeader>
+                <CardTitle>Security Settings</CardTitle>
+                <CardDescription>
+                  Configure security policies and access controls
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="twoFactorAuth">Two-Factor Authentication</Label>
+                    <p className="text-sm text-muted-foreground">Require 2FA for all admin accounts</p>
+                  </div>
+                  <Switch 
+                    id="twoFactorAuth" 
+                    checked={securitySettings.twoFactorAuth}
+                    onCheckedChange={(value) => setSecuritySettings({...securitySettings, twoFactorAuth: value})}
+                  />
+                </div>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>System Operations</CardTitle>
-                    <CardDescription>
-                      Advanced system maintenance operations
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Button variant="outline">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
-                        Backup Database
-                      </Button>
-                      
-                      <Button variant="outline">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 12v6"/><path d="m15 15-3 3-3-3"/></svg>
-                        Restore Backup
-                      </Button>
-                      
-                      <Button variant="outline">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                        Clear Cache
-                      </Button>
-                      
-                      <Button variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                        Reset System
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+                <div className="space-y-2">
+                  <Label htmlFor="passwordStrength">Password Strength Requirement</Label>
+                  <Select 
+                    value={securitySettings.passwordStrength}
+                    onValueChange={(value) => setSecuritySettings({...securitySettings, passwordStrength: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select requirement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low - Minimum 6 characters</SelectItem>
+                      <SelectItem value="medium">Medium - 8+ chars with numbers</SelectItem>
+                      <SelectItem value="high">High - 10+ chars with numbers & symbols</SelectItem>
+                      <SelectItem value="extreme">Extreme - 12+ with upper, lower, numbers & symbols</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="sessionTimeout">Session Timeout (minutes): {securitySettings.sessionTimeout}</Label>
+                    <span className="text-sm text-muted-foreground w-12 text-right">{securitySettings.sessionTimeout}</span>
+                  </div>
+                  <Slider
+                    id="sessionTimeout"
+                    min={5}
+                    max={240}
+                    step={5}
+                    value={[securitySettings.sessionTimeout]}
+                    onValueChange={(value) => setSecuritySettings({...securitySettings, sessionTimeout: value[0]})}
+                  />
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="loginAttempts">Max Login Attempts: {securitySettings.loginAttempts}</Label>
+                    <span className="text-sm text-muted-foreground w-12 text-right">{securitySettings.loginAttempts}</span>
+                  </div>
+                  <Slider
+                    id="loginAttempts"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[securitySettings.loginAttempts]}
+                    onValueChange={(value) => setSecuritySettings({...securitySettings, loginAttempts: value[0]})}
+                  />
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="ipWhitelist">IP Whitelist</Label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {securitySettings.ipWhitelist.length > 0 ? (
+                      securitySettings.ipWhitelist.map((ip, index) => (
+                        <div key={index} className="flex items-center bg-muted rounded-md px-3 py-1">
+                          <span>{ip}</span>
+                          <button 
+                            className="ml-2 text-muted-foreground hover:text-destructive"
+                            onClick={() => {
+                              const newList = [...securitySettings.ipWhitelist];
+                              newList.splice(index, 1);
+                              setSecuritySettings({...securitySettings, ipWhitelist: newList});
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No IP addresses whitelisted</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input id="newIp" placeholder="Enter IP address" />
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        // Just for demo - would validate IP in real implementation
+                        const input = document.getElementById("newIp") as HTMLInputElement;
+                        const newIp = input.value.trim();
+                        if (newIp) {
+                          const updatedList = [...securitySettings.ipWhitelist];
+                          if (!updatedList.includes(newIp)) {
+                            updatedList.push(newIp);
+                          }
+                          setSecuritySettings({
+                            ...securitySettings,
+                            ipWhitelist: updatedList
+                          });
+                          input.value = "";
+                        }
+                      }}
+                    >
+                      Add IP
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="pt-4 flex gap-4">
+                  <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10">
+                    Reset All Security Settings
+                  </Button>
+                  <Button variant="default">
+                    Run Security Scan
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
