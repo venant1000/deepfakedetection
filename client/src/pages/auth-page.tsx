@@ -97,21 +97,10 @@ export default function AuthPage() {
             </div>
 
             <div className="mb-6">
-              <div className="flex gap-4">
-                <button className="flex-1 py-3 glass-dark rounded-lg flex items-center justify-center gap-2 hover:bg-muted transition-colors">
-                  <FaGoogle className="text-white" />
-                  <span>Google</span>
-                </button>
-                <button className="flex-1 py-3 glass-dark rounded-lg flex items-center justify-center gap-2 hover:bg-muted transition-colors">
-                  <FaGithub className="text-white" />
-                  <span>GitHub</span>
-                </button>
-              </div>
-
-              <div className="flex items-center my-6">
+              <div className="flex items-center mb-6">
                 <div className="flex-grow h-px bg-muted"></div>
                 <span className="px-4 text-sm text-muted-foreground">
-                  or continue with
+                  Login with username and password
                 </span>
                 <div className="flex-grow h-px bg-muted"></div>
               </div>
