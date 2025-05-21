@@ -30,6 +30,10 @@ function Router() {
       <ProtectedRoute path="/admin/analytics" component={AdminAnalyticsPage} />
       <ProtectedRoute path="/admin/logs" component={AdminLogsPage} />
       <ProtectedRoute path="/admin/settings" component={AdminSettingsPage} />
+      <ProtectedRoute path="/reports" component={ReportsPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/help" component={HelpPage} />
       <Route component={NotFound} />
     </Switch>
   );
