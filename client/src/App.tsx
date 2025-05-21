@@ -9,6 +9,7 @@ import DashboardPage from "@/pages/dashboard-page";
 import AnalysisPage from "@/pages/analysis-page";
 import UploadPage from "@/pages/upload-page.jsx";
 import AdminUsersPage from "@/pages/admin-users-page.jsx";
+import AdminAnalyticsPage from "@/pages/admin-analytics-page.jsx";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 import ChatbotWidget from "./components/shared/chatbot-widget";
@@ -22,6 +23,7 @@ function Router() {
       <ProtectedRoute path="/upload" component={UploadPage} />
       <ProtectedRoute path="/analysis/:id" component={AnalysisPage} />
       <ProtectedRoute path="/admin/users" component={AdminUsersPage} />
+      <ProtectedRoute path="/admin/analytics" component={AdminAnalyticsPage} />
       <Route component={NotFound} />
     </Switch>
   );
