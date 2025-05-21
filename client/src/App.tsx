@@ -8,6 +8,7 @@ import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
 import AnalysisPage from "@/pages/analysis-page";
 import UploadPage from "@/pages/upload-page.jsx";
+import AdminPage from "@/pages/admin-page";
 import AdminUsersPage from "@/pages/admin-users-page.jsx";
 import AdminAnalyticsPage from "@/pages/admin-analytics-page.jsx";
 import AdminLogsPage from "@/pages/admin-logs-page";
@@ -24,6 +25,7 @@ function Router() {
       <ProtectedRoute path="/dashboard" component={DashboardPage} />
       <ProtectedRoute path="/upload" component={UploadPage} />
       <ProtectedRoute path="/analysis/:id" component={AnalysisPage} />
+      <ProtectedRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/admin/users" component={AdminUsersPage} />
       <ProtectedRoute path="/admin/analytics" component={AdminAnalyticsPage} />
       <ProtectedRoute path="/admin/logs" component={AdminLogsPage} />

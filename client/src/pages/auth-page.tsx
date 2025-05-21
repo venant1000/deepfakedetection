@@ -17,14 +17,19 @@ export default function AuthPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [formError, setFormError] = useState("");
   
-  // Redirect to dashboard if already logged in
+  // Redirect to appropriate dashboard based on user role
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      // Check if user is admin and redirect accordingly
+      if (user.username === "admin") {
+        navigate("/admin/analytics");
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, [user, navigate]);
   
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
     
@@ -41,7 +46,7 @@ export default function AuthPage() {
     loginMutation.mutate({ username, password });
   };
   
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
     
