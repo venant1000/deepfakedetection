@@ -45,7 +45,7 @@ export class MemStorage implements IStorage {
     // Add a default admin user
     this.createUser({
       username: "admin",
-      password: "password" // In a real app, this would be hashed
+      password: "admin123" // In a real app, this would be hashed
     }).then(admin => {
       console.log("Created default admin user");
     });
