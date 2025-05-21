@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 142 100% 50%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 271 100% 50%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 142 100% 50%;
+  --radius: 0.5rem;
+
+  --chart-1: 142 100% 50%;
+  --chart-2: 271 100% 50%;
+  --chart-3: 204 100% 50%;
+  --chart-4: 38 100% 50%;
+  --chart-5: 350 100% 60%;
+
+  --sidebar-background: 240 10% 3.9%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-primary: 142 100% 50%;
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-accent: 271 100% 50%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 142 100% 50%;
+}
+
+.light {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --primary: 142 70% 45%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 271 70% 45%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 142 70% 45%;
+
+  --chart-1: 142 70% 45%;
+  --chart-2: 271 70% 45%;
+  --chart-3: 204 70% 45%;
+  --chart-4: 38 70% 45%;
+  --chart-5: 350 70% 45%;
+
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 240 10% 3.9%;
+  --sidebar-primary: 142 70% 45%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 271 70% 45%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-border: 240 5.9% 90%;
+  --sidebar-ring: 142 70% 45%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+.glass {
+  @apply bg-opacity-20 backdrop-blur-md border border-white/10;
+}
+
+.glass-dark {
+  @apply bg-black/70 backdrop-blur-md border border-white/5;
+}
+
+.neon-border {
+  @apply border border-primary shadow-[0_0_5px_rgba(0,255,136,0.5)];
+}
+
+.neon-border-purple {
+  @apply border border-secondary shadow-[0_0_5px_rgba(112,0,255,0.5)];
+}
+
+.neon-text {
+  text-shadow: 0 0 10px rgba(0,255,136,0.7);
+}
+
+.neon-text-purple {
+  text-shadow: 0 0 10px rgba(112,0,255,0.7);
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-primary to-[#0088ff] bg-clip-text text-transparent;
+}
+
+.gradient-bg {
+  @apply bg-gradient-to-br from-primary/15 to-secondary/15;
+}
+
+.grid-bg {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.button-glow:hover {
+  @apply shadow-[0_0_20px_rgba(0,255,136,0.8)];
+}
+
+.purple-glow:hover {
+  @apply shadow-[0_0_20px_rgba(112,0,255,0.8)];
+}
+
+.floating-card {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.6); }
+  100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.9); }
+}
+
+.timeline-marker {
+  @apply w-3 h-3 rounded-full bg-primary absolute top-[-4px] transform -translate-x-1/2 cursor-pointer z-10;
+}
+
+.timeline-marker.warning {
+  @apply bg-[#ffbb00];
+}
+
+.timeline-marker.danger {
+  @apply bg-[#ff3366];
+}
+
+.timeline-tooltip {
+  @apply hidden absolute bottom-5 left-1/2 -translate-x-1/2 bg-black/90 p-2 rounded-md text-xs whitespace-nowrap z-20;
+}
+
+.timeline-marker:hover .timeline-tooltip {
+  @apply block;
+}
+
+.progress-ring {
+  transition: stroke-dashoffset 0.35s;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
