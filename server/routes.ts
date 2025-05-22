@@ -42,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Function to run deepfake analysis using Python model
   async function runDeepfakeAnalysis(videoPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      const pythonScript = path.join(__dirname, 'simple_detector.py');
+      const pythonScript = path.join(process.cwd(), 'server', 'simple_detector.py');
       const pythonProcess = spawn('python3', [pythonScript, videoPath]);
       
       let stdout = '';
@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const videoId = `${Date.now()}-${req.user.id}-${Math.floor(Math.random() * 1000)}`;
       
       // Save video file temporarily for analysis
-      const tempVideoPath = path.join(__dirname, '..', 'uploads', `${videoId}.${req.file.originalname.split('.').pop()}`);
+      const tempVideoPath = path.join(process.cwd(), 'uploads', `${videoId}.${req.file.originalname.split('.').pop()}`);
       
       // Ensure uploads directory exists
       const uploadsDir = path.dirname(tempVideoPath);
