@@ -474,6 +474,7 @@ export default function AdminAnalyticsPage() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
                 
                 {/* Charts Row 1 */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -588,8 +589,8 @@ export default function AdminAnalyticsPage() {
                               type="monotone" 
                               dataKey="rate" 
                               fill="url(#colorRate)" 
-                              fillOpacity={0.3}
-                              stroke={false}
+                              fillOpacity="0.3"
+                              stroke="none"
                             />
                             <Line 
                               type="monotone" 
@@ -1007,7 +1008,7 @@ export default function AdminAnalyticsPage() {
                                   {metric.value > metric.target * 0.8 ? (
                                     <AlertTriangle className="h-4 w-4 text-warning" />
                                   ) : (
-                                    <CheckCircle className="h-4 w-4 text-success" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-success"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                                   )}
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -1026,12 +1027,7 @@ export default function AdminAnalyticsPage() {
                             <Progress 
                               value={metric.value} 
                               max={100} 
-                              className="h-2" 
-                              indicatorClassName={`bg-gradient-to-r from-${
-                                metric.value > metric.target * 0.8 ? 'warning' : 'success'
-                              } to-${
-                                metric.value > metric.target * 0.8 ? 'error' : 'primary'
-                              }`}
+                              className="h-2"
                             />
                           </div>
                         </CardContent>
