@@ -249,9 +249,9 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
         </div>
       </div>
       
-      {/* Video Progress */}
+      {/* Anomaly Timeline */}
       <div className="mt-8">
-        <h3 className="text-lg font-medium mb-4">Video Progress</h3>
+        <h3 className="text-lg font-medium mb-4">Anomaly Timeline</h3>
         <div className="relative">
           {/* Timeline bar */}
           <div 
@@ -264,6 +264,26 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
               className="h-1 bg-muted-foreground rounded-full absolute top-0 left-0" 
               style={{ width: `${progressPosition}%` }}
             ></div>
+            
+            {/* Timeline markers */}
+            {analysis.timeline && analysis.timeline.map((marker, index) => (
+              <div 
+                key={index}
+                className={`timeline-marker ${marker.type === 'warning' ? 'warning' : marker.type === 'danger' ? 'danger' : ''}`}
+                style={{ left: `${marker.position}%` }}
+              >
+                <div className="timeline-tooltip">
+                  <div className="font-medium">{marker.tooltip}</div>
+                  <div className="text-xs opacity-80">
+                    {marker.type === 'danger' 
+                      ? 'Critical issue detected - High confidence' 
+                      : marker.type === 'warning' 
+                      ? 'Potential anomaly - Medium confidence' 
+                      : 'Info point - Reference only'}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
           
           {/* Time markers */}
