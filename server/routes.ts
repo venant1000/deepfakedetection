@@ -154,17 +154,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         analysisData = await runDeepfakeAnalysis(tempVideoPath);
         console.log("Analysis completed. Results:", JSON.stringify(analysisData, null, 2));
         
-        // Clean up temporary file after analysis
-        fs.unlinkSync(tempVideoPath);
+        // Keep the video file for playback
+        console.log(`Video file saved at ${tempVideoPath} for future playback`);
         
         if (analysisData.error) {
           throw new Error(analysisData.error);
         }
       } catch (error) {
-        // Clean up temporary file on error
-        if (fs.existsSync(tempVideoPath)) {
-          fs.unlinkSync(tempVideoPath);
-        }
+        // Keep the video file even if analysis fails
         console.error("Deepfake analysis failed:", error);
         const errorMessage = error instanceof Error ? error.message : String(error);
         return res.status(500).json({ 
