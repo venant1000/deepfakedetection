@@ -1,23 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize the Google Generative AI with the API key
-const getGenAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  
-  if (!apiKey) {
-    console.error("GEMINI_API_KEY is not defined in environment variables");
-    throw new Error("Gemini API key is not configured");
-  }
-  
-  return new GoogleGenerativeAI(apiKey);
-};
-
-// Create a function to get the model with proper error handling
-const getModel = () => {
-  const genAI = getGenAI();
-  return genAI.getGenerativeModel({ model: "gemini-pro" });
-};
-
 // System prompt that guides the model to focus on deepfake-related questions
 const SYSTEM_PROMPT = `
 You are an expert AI assistant specializing in deepfake detection and digital media forensics.
@@ -46,8 +28,15 @@ Your expertise includes:
  */
 export async function processDeepfakeQuery(userMessage: string): Promise<string> {
   try {
-    // Get the model instance fresh each time
-    const model = getModel();
+    // Get API key from environment
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not configured in environment");
+    }
+    
+    // Initialize Gemini API
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     // Create a chat session
     const chat = model.startChat({
@@ -75,8 +64,15 @@ export async function processDeepfakeQuery(userMessage: string): Promise<string>
  */
 export async function getDeepfakeTips(): Promise<string[]> {
   try {
-    // Get the model instance fresh each time
-    const model = getModel();
+    // Get API key from environment
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not configured in environment");
+    }
+    
+    // Initialize Gemini API
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const prompt = "Provide 5 short, practical tips for detecting deepfakes in videos. Make each tip 1-2 sentences only.";
     
