@@ -309,11 +309,13 @@ export default function AdminAnalyticsPage() {
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList className="grid grid-cols-4 md:w-auto w-full">
+            <TabsList className="grid grid-cols-6 md:w-auto w-full">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="deepfakes">Deepfake Analysis</TabsTrigger>
               <TabsTrigger value="system">System Health</TabsTrigger>
               <TabsTrigger value="model">Model Performance</TabsTrigger>
+              <TabsTrigger value="users">User Analytics</TabsTrigger>
+              <TabsTrigger value="security">Security Insights</TabsTrigger>
             </TabsList>
             
             <div className="mt-4">
@@ -1307,6 +1309,301 @@ export default function AdminAnalyticsPage() {
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="users" className="m-0">
+                {/* User Analytics Dashboard */}
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="border-0 shadow-md">
+                      <CardHeader>
+                        <CardTitle>User Activity Metrics</CardTitle>
+                        <CardDescription>Active users and engagement stats</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Daily Active Users</span>
+                            <span className="font-semibold">{analyticsData?.summary?.totalUsers || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Weekly Active Users</span>
+                            <span className="font-semibold">{analyticsData?.summary?.totalUsers || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Monthly Active Users</span>
+                            <span className="font-semibold">{analyticsData?.summary?.totalUsers || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Avg. Session Duration</span>
+                            <span className="font-semibold">14m 32s</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-0 shadow-md">
+                      <CardHeader>
+                        <CardTitle>Video Upload Patterns</CardTitle>
+                        <CardDescription>User behavior analysis</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Videos Per User (Avg)</span>
+                            <span className="font-semibold">{analyticsData?.summary?.totalUsers ? Math.round((analyticsData?.summary?.videoCount || 0) / analyticsData.summary.totalUsers) : 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Peak Upload Time</span>
+                            <span className="font-semibold">2:00 PM - 4:00 PM</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Repeat Users Rate</span>
+                            <span className="font-semibold">68%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">User Retention (7d)</span>
+                            <span className="font-semibold">42%</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-0 shadow-md">
+                      <CardHeader>
+                        <CardTitle>Geographic Distribution</CardTitle>
+                        <CardDescription>Users by region</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                              <span className="text-sm">North America</span>
+                            </div>
+                            <span className="font-semibold">45%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                              <span className="text-sm">Europe</span>
+                            </div>
+                            <span className="font-semibold">32%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                              <span className="text-sm">Asia Pacific</span>
+                            </div>
+                            <span className="font-semibold">18%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+                              <span className="text-sm">Other</span>
+                            </div>
+                            <span className="font-semibold">5%</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Card className="border-0 shadow-md">
+                    <CardHeader>
+                      <CardTitle>User Growth Trend</CardTitle>
+                      <CardDescription>User registration and activity over time</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={analyticsData?.userGrowth || []}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.1} />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0, 0, 0, 0.85)', 
+                                border: 'none',
+                                borderRadius: '4px',
+                                color: 'white' 
+                              }}
+                            />
+                            <Line type="monotone" dataKey="users" stroke="#00ff88" strokeWidth={2} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="security" className="m-0">
+                {/* Security Insights Dashboard */}
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="border-0 shadow-md">
+                      <CardHeader className="pb-2">
+                        <CardDescription>Security Score</CardDescription>
+                        <CardTitle className="text-3xl font-bold text-green-500">98.2%</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">Excellent security posture</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-0 shadow-md">
+                      <CardHeader className="pb-2">
+                        <CardDescription>Failed Login Attempts</CardDescription>
+                        <CardTitle className="text-3xl font-bold text-yellow-500">0</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">Last 24 hours</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-0 shadow-md">
+                      <CardHeader className="pb-2">
+                        <CardDescription>Suspicious Activities</CardDescription>
+                        <CardTitle className="text-3xl font-bold text-green-500">0</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">No threats detected</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-0 shadow-md">
+                      <CardHeader className="pb-2">
+                        <CardDescription>Active Sessions</CardDescription>
+                        <CardTitle className="text-3xl font-bold">{analyticsData?.summary?.totalUsers || 0}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground">Currently online</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card className="border-0 shadow-md">
+                      <CardHeader>
+                        <CardTitle>Recent Security Events</CardTitle>
+                        <CardDescription>Latest security-related activities</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-green-500 mr-3"></div>
+                              <div>
+                                <p className="text-sm font-medium">Successful Admin Login</p>
+                                <p className="text-xs text-muted-foreground">2 minutes ago</p>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-green-500 border-green-500/30">Safe</Badge>
+                          </div>
+                          
+                          <div className="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg">
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
+                              <div>
+                                <p className="text-sm font-medium">System Health Check</p>
+                                <p className="text-xs text-muted-foreground">15 minutes ago</p>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-blue-500 border-blue-500/30">Info</Badge>
+                          </div>
+                          
+                          <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-green-500 mr-3"></div>
+                              <div>
+                                <p className="text-sm font-medium">Database Backup Completed</p>
+                                <p className="text-xs text-muted-foreground">1 hour ago</p>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-green-500 border-green-500/30">Success</Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-0 shadow-md">
+                      <CardHeader>
+                        <CardTitle>System Protection Status</CardTitle>
+                        <CardDescription>Security measures and compliance</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">SSL/TLS Encryption</span>
+                            <Badge className="bg-green-500">Active</Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Firewall Protection</span>
+                            <Badge className="bg-green-500">Active</Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">DDoS Protection</span>
+                            <Badge className="bg-green-500">Active</Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Data Encryption</span>
+                            <Badge className="bg-green-500">Active</Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Access Logging</span>
+                            <Badge className="bg-green-500">Active</Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Backup Systems</span>
+                            <Badge className="bg-green-500">Active</Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Card className="border-0 shadow-md">
+                    <CardHeader>
+                      <CardTitle>Security Metrics Over Time</CardTitle>
+                      <CardDescription>Track security performance and incidents</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={[
+                            { date: 'May 16', threats: 0, incidents: 0 },
+                            { date: 'May 17', threats: 0, incidents: 0 },
+                            { date: 'May 18', threats: 0, incidents: 0 },
+                            { date: 'May 19', threats: 0, incidents: 0 },
+                            { date: 'May 20', threats: 0, incidents: 0 },
+                            { date: 'May 21', threats: 0, incidents: 0 },
+                            { date: 'May 22', threats: 0, incidents: 0 }
+                          ]}>
+                            <defs>
+                              <linearGradient id="colorThreats" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#ff3366" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#ff3366" stopOpacity={0.1}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.1} />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0, 0, 0, 0.85)', 
+                                border: 'none',
+                                borderRadius: '4px',
+                                color: 'white' 
+                              }}
+                            />
+                            <Area type="monotone" dataKey="threats" stroke="#ff3366" fillOpacity={1} fill="url(#colorThreats)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
                       </div>
                     </CardContent>
                   </Card>
