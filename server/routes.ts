@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileName: req.file.originalname,
         userId: req.user.id,
         uploadDate: new Date().toISOString(),
-        fileSize: Math.floor(req.file.size / 1024), // Convert to KB
+        fileSize: req.file.size ? Math.floor(req.file.size / 1024) : undefined, // Convert to KB if size exists
         analysis: {
           isDeepfake,
           confidence,
