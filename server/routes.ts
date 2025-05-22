@@ -532,6 +532,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chatbot API - Process deepfake-related questions
+  app.post("/api/chatbot/query", express.json(), async (req, res) => {
+    try {
+      const { message } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+      
+      // Process the query using Gemini AI
+      const response = await processDeepfakeQuery(message);
+      
+      res.json({ response });
+    } catch (error) {
+      console.error("Error processing chatbot query:", error);
+      res.status(500).json({ 
+        error: "Failed to process query",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get deepfake detection tips
+  app.get("/api/chatbot/tips", async (req, res) => {
+    try {
+      const tips = await getDeepfakeTips();
+      res.json({ tips });
+    } catch (error) {
+      console.error("Error getting deepfake tips:", error);
+      res.status(500).json({ 
+        error: "Failed to get deepfake tips",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

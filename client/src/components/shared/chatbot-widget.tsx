@@ -31,7 +31,7 @@ export default function ChatbotWidget() {
     }
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (input.trim() === "") return;
     
     // Add user message
@@ -39,84 +39,97 @@ export default function ChatbotWidget() {
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     
-    // Simulate bot typing
+    // Set typing indicator
     setIsTyping(true);
     
-    // Simulate bot response after delay
-    setTimeout(() => {
-      let botResponse: Message;
+    try {
+      // Send query to Gemini API
+      const response = await fetch("/api/chatbot/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userMessage.text }),
+      });
       
-      // Simple response logic based on keywords
-      const lowercaseInput = input.toLowerCase();
-      
-      if (lowercaseInput.includes("how") && lowercaseInput.includes("spot")) {
-        botResponse = {
-          sender: "bot",
-          text: "Here are some key signs to look for when trying to identify a deepfake:\n\n* Unnatural eye movements or lack of blinking\n* Inconsistent lighting on the face\n* Poor lip synchronization with audio\n* Blurry or changing face edges\n* Unnatural skin tone or texture\n\nWould you like me to explain any of these in more detail?",
-          isMarkdown: true
-        };
-      } else if (lowercaseInput.includes("deepfake") && lowercaseInput.includes("work")) {
-        botResponse = {
-          sender: "bot",
-          text: "Deepfakes work by using artificial intelligence, specifically deep learning algorithms, to replace a person's likeness in an image or video with someone else's. The technology typically uses two AI models working together:\n\n1. **Encoder**: Analyzes and learns patterns from both face images\n2. **Decoder**: Reconstructs faces with swapped features\n\nThe most common method uses Generative Adversarial Networks (GANs) where two neural networks compete - one creates the fake content, while the other tries to detect if it's real or fake.",
-          isMarkdown: true
-        };
-      } else if (lowercaseInput.includes("audio")) {
-        botResponse = {
-          sender: "bot",
-          text: "Audio deepfakes, also called voice cloning, use AI to synthesize a person's voice. With just a few minutes of sample audio, deepfake technology can create realistic voice replicas that can say anything. \n\nThese are created using neural networks that analyze voice patterns, intonation, and speech characteristics. Common signs of audio deepfakes include:\n\n* Unnatural rhythm or cadence\n* Inconsistent breathing patterns\n* Strange artifacts or glitches in audio\n* Unusual background noise patterns",
-          isMarkdown: true
-        };
-      } else {
-        botResponse = {
-          sender: "bot",
-          text: "That's an interesting question about deepfakes. Would you like me to provide more specific information about detection techniques, creation methods, or how to protect yourself from deepfake content?"
-        };
+      if (!response.ok) {
+        throw new Error("Failed to get response from chatbot");
       }
       
+      const data = await response.json();
+      
+      // Format the response with markdown support
+      const botResponse: Message = {
+        sender: "bot",
+        text: data.response,
+        isMarkdown: true
+      };
+      
       setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error("Error fetching chatbot response:", error);
+      
+      // Fallback response in case of error
+      const errorResponse: Message = {
+        sender: "bot",
+        text: "I'm having trouble connecting right now. Please try again in a moment."
+      };
+      
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
+  const handleSuggestionClick = async (suggestion: string) => {
+    // Set the suggestion as input first (for user visibility)
     setInput(suggestion);
+    
     // Submit the suggestion immediately
     const userMessage: Message = { sender: "user", text: suggestion };
     setMessages(prev => [...prev, userMessage]);
     
-    // Simulate bot typing
+    // Set typing indicator
     setIsTyping(true);
     
-    // Simulate bot response after delay for suggestions
-    setTimeout(() => {
-      let botResponse: Message;
+    try {
+      // Call the Gemini API with the suggestion
+      const response = await fetch("/api/chatbot/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: suggestion }),
+      });
       
-      if (suggestion === "How do deepfakes work?") {
-        botResponse = {
-          sender: "bot",
-          text: "Deepfakes work by using artificial intelligence, specifically deep learning algorithms, to replace a person's likeness in an image or video with someone else's. The technology typically uses two AI models working together:\n\n1. **Encoder**: Analyzes and learns patterns from both face images\n2. **Decoder**: Reconstructs faces with swapped features\n\nThe most common method uses Generative Adversarial Networks (GANs) where two neural networks compete - one creates the fake content, while the other tries to detect if it's real or fake.",
-          isMarkdown: true
-        };
-      } else if (suggestion === "Audio deepfakes") {
-        botResponse = {
-          sender: "bot",
-          text: "Audio deepfakes, also called voice cloning, use AI to synthesize a person's voice. With just a few minutes of sample audio, deepfake technology can create realistic voice replicas that can say anything. \n\nThese are created using neural networks that analyze voice patterns, intonation, and speech characteristics. Common signs of audio deepfakes include:\n\n* Unnatural rhythm or cadence\n* Inconsistent breathing patterns\n* Strange artifacts or glitches in audio\n* Unusual background noise patterns",
-          isMarkdown: true
-        };
-      } else if (suggestion === "Deepfake laws") {
-        botResponse = {
-          sender: "bot",
-          text: "Deepfake regulation is still evolving globally. Some key legal developments include:\n\n* **United States**: Several states (CA, TX, VA) have laws against non-consensual deepfake pornography\n* **China**: Requires deepfakes to be clearly labeled as synthetic\n* **EU**: The Digital Services Act includes provisions that could affect deepfake distribution\n* **South Korea**: Has specific laws prohibiting the creation of deepfake content without consent\n\nMany jurisdictions are working on additional legislation as the technology advances.",
-          isMarkdown: true
-        };
+      if (!response.ok) {
+        throw new Error("Failed to get response from chatbot");
       }
       
-      setMessages(prev => [...prev, botResponse!]);
+      const data = await response.json();
+      
+      // Add the AI-generated response
+      const botResponse: Message = {
+        sender: "bot",
+        text: data.response,
+        isMarkdown: true
+      };
+      
+      setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error("Error fetching chatbot response for suggestion:", error);
+      
+      // Fallback response in case of error
+      const errorResponse: Message = {
+        sender: "bot",
+        text: "I'm having trouble answering that right now. Please try again in a moment."
+      };
+      
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
-    
-    setInput("");
+      setInput("");
+    }
   };
 
   // Format markdown-like text for display
