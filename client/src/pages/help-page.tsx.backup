@@ -172,6 +172,16 @@ export default function HelpPage() {
     }
   ];
 
+  // Handle contact form
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Support request submitted",
+      description: "We've received your message and will respond shortly."
+    });
+    // Reset form (in a real app, you'd clear the form fields here)
+  };
+
   // Filter FAQs based on search query
   const filteredFAQs = searchQuery.trim() === "" 
     ? faqCategories 
@@ -308,54 +318,18 @@ export default function HelpPage() {
                 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Quick Tips for Better Results</CardTitle>
+                    <CardTitle>Video Walkthrough</CardTitle>
                     <CardDescription>
-                      Optimize your deepfake detection experience
+                      Watch our quick tutorial video
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-4">
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">
-                          <span className="font-medium">Use high-quality videos</span> - Higher quality videos contain more data for our AI to analyze, leading to more accurate results.
-                        </p>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">
-                          <span className="font-medium">Focus on faces</span> - Most deepfakes manipulate facial features, so videos with clear views of faces provide better analysis.
-                        </p>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">
-                          <span className="font-medium">Check both visuals and audio</span> - Our system analyzes both video and audio components to detect inconsistencies.
-                        </p>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">
-                          <span className="font-medium">Review the detailed report</span> - Don't just check the verdict; explore the detailed findings for a complete understanding of potential issues.
-                        </p>
-                      </li>
-                    </ul>
+                    <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polygon points="10 8 16 12 10 16 10 8"/>
+                      </svg>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -363,126 +337,91 @@ export default function HelpPage() {
               <div>
                 <Card className="mb-6">
                   <CardHeader>
-                    <CardTitle>Understanding Analysis Results</CardTitle>
+                    <CardTitle>Understanding Your First Analysis</CardTitle>
                     <CardDescription>
-                      Learn how to interpret our deepfake detection findings
+                      How to interpret the detection results
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <h3 className="font-medium mb-2">Confidence Score</h3>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className="bg-green-500">High (90-100%)</Badge>
-                        <span className="text-sm">Very reliable detection</span>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="text-md font-medium">Confidence Score</h3>
+                      <div className="flex items-center gap-4">
+                        <div className="h-5 flex-grow bg-muted rounded-full overflow-hidden">
+                          <div className="bg-primary h-full" style={{ width: '85%' }}></div>
+                        </div>
+                        <span className="text-sm font-medium">85%</span>
                       </div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className="bg-yellow-500">Medium (70-89%)</Badge>
-                        <span className="text-sm">Fairly reliable detection</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-red-500">Low (Below 70%)</Badge>
-                        <span className="text-sm">Requires manual review</span>
+                      <p className="text-sm text-muted-foreground">
+                        The confidence score indicates how certain our AI is about the detection result. Higher scores mean greater confidence.
+                      </p>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-2">
+                      <h3 className="text-md font-medium">Detected Issues</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                          <Badge variant="default">Face</Badge>
+                          <span className="text-sm">Inconsistent blinking</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                          <Badge variant="default">Audio</Badge>
+                          <span className="text-sm">Voice modulation</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                          <Badge variant="default">Motion</Badge>
+                          <span className="text-sm">Unnatural movement</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                          <Badge variant="default">Lighting</Badge>
+                          <span className="text-sm">Shadow inconsistencies</span>
+                        </div>
                       </div>
                     </div>
                     
                     <Separator />
                     
-                    <div>
-                      <h3 className="font-medium mb-2">Common Detection Indicators</h3>
-                      <ul className="space-y-2 text-sm">
-                        <li className="flex gap-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                          </svg>
-                          <span>Facial inconsistencies (blurring, unnatural features)</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <path d="M17.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
-                            <path d="M6.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
-                            <path d="m15 5-2 12-2 4"/>
-                            <path d="m18 5-4.5 16.5"/>
-                            <path d="m13.5 17.5-7 1.5"/>
-                          </svg>
-                          <span>Unnatural body movements or postures</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <path d="M9.6 14H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.6a2 2 0 0 1 1.4.6L10.4 5"/>
-                            <path d="M20 15a2 2 0 0 1-2 2h-9.6a2 2 0 0 1-1.4-.6L5.6 15"/>
-                            <path d="M22 5a2 2 0 0 0-2-2h-3.6a2 2 0 0 0-1.4.6L13.6 5"/>
-                            <path d="M14.4 10H20a2 2 0 0 1 2 2v7c0 1.1-.9 2-2 2h-3.6a2 2 0 0 1-1.4-.6L13.6 19"/>
-                          </svg>
-                          <span>Audio-visual misalignment or unnatural speech</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <circle cx="12" cy="12" r="4"/>
-                            <path d="M12 4a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0V5a1 1 0 0 0-1-1Z"/>
-                            <path d="M17.66 6.345a1 1 0 0 0-1.41 0l-1.415 1.413a1 1 0 1 0 1.41 1.42l1.415-1.414a1 1 0 0 0 0-1.42Z"/>
-                            <path d="M20 11a1 1 0 0 0-1-1h-2a1 1 0 0 0 0 2h2a1 1 0 0 0 1-1Z"/>
-                            <path d="M17.66 15.655a1 1 0 0 0 0 1.414l1.414 1.414a1 1 0 0 0 1.42-1.414l-1.415-1.414a1 1 0 0 0-1.42 0Z"/>
-                            <path d="M12 17a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-1-1Z"/>
-                            <path d="M7.76 15.655a1 1 0 0 0-1.42 0l-1.414 1.414a1 1 0 1 0 1.414 1.414l1.414-1.414a1 1 0 0 0 0-1.414Z"/>
-                            <path d="M6 11a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h2a1 1 0 0 0 1-1Z"/>
-                            <path d="M7.76 6.345a1 1 0 0 0-1.42 1.42l1.414 1.414a1 1 0 1 0 1.414-1.42L7.759 6.344Z"/>
-                          </svg>
-                          <span>Inconsistent lighting or shadows</span>
-                        </li>
-                      </ul>
+                    <div className="space-y-2">
+                      <h3 className="text-md font-medium">Timeline Markers</h3>
+                      <div className="h-6 bg-muted rounded-full relative">
+                        <div className="absolute h-6 w-1 bg-red-500 rounded-full" style={{ left: '20%' }}></div>
+                        <div className="absolute h-6 w-1 bg-yellow-500 rounded-full" style={{ left: '45%' }}></div>
+                        <div className="absolute h-6 w-1 bg-red-500 rounded-full" style={{ left: '70%' }}></div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Timeline markers highlight specific moments in the video where manipulation was detected.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                      </svg>
-                      Staying Protected
-                    </CardTitle>
+                    <CardTitle>Common Terms</CardTitle>
                     <CardDescription>
-                      Tips for protecting yourself from deepfake threats
+                      Glossary of deepfake detection terminology
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-4">
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">Verify information from multiple trusted sources before believing or sharing videos.</p>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">Be cautious of videos showing people saying or doing things that seem out of character.</p>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">Check video metadata and source information when possible.</p>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-0.5">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                        <p className="text-sm">Use DeepGuard AI regularly to scan suspicious media before sharing or making important decisions based on it.</p>
-                      </li>
-                    </ul>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="font-medium">Deepfake</p>
+                        <p className="text-sm text-muted-foreground">Synthetic media where a person's likeness is replaced with someone else's using AI techniques.</p>
+                      </div>
+                      <div>
+                        <p className="font-medium">GAN</p>
+                        <p className="text-sm text-muted-foreground">Generative Adversarial Network - an AI architecture commonly used to create deepfakes.</p>
+                      </div>
+                      <div>
+                        <p className="font-medium">Face Swapping</p>
+                        <p className="text-sm text-muted-foreground">A technique that replaces one person's face with another in videos or images.</p>
+                      </div>
+                      <div>
+                        <p className="font-medium">Voice Synthesis</p>
+                        <p className="text-sm text-muted-foreground">Technology that creates artificial speech that mimics a real person's voice.</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -528,40 +467,187 @@ export default function HelpPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article1">The Evolution of Deepfake Technology</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          A comprehensive overview of how deepfake technology has evolved and where it's headed.
-                        </p>
+                      {[
+                        { title: "Understanding Deepfake Technology", date: "May 10, 2025", readTime: "8 min read" },
+                        { title: "How to Spot a Deepfake Video", date: "Apr 28, 2025", readTime: "6 min read" },
+                        { title: "The Ethics of Synthetic Media", date: "Apr 15, 2025", readTime: "10 min read" },
+                        { title: "Protecting Yourself from Disinformation", date: "Mar 30, 2025", readTime: "7 min read" }
+                      ].map((article, index) => (
+                        <a key={index} href="#" className="block p-4 rounded-lg hover:bg-muted transition-colors">
+                          <h3 className="font-medium mb-1">{article.title}</h3>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{article.date}</span>
+                            <span>•</span>
+                            <span>{article.readTime}</span>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Download Resources</CardTitle>
+                    <CardDescription>
+                      Helpful guides and tools
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {[
+                        { title: "DeepGuard AI User Manual", size: "2.4 MB", type: "PDF" },
+                        { title: "Deepfake Detection Checklist", size: "1.1 MB", type: "PDF" },
+                        { title: "Media Verification Toolkit", size: "5.7 MB", type: "ZIP" },
+                        { title: "Research Paper: AI Detection Methods", size: "3.2 MB", type: "PDF" }
+                      ].map((download, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" x2="8" y1="13" y2="13"/>
+                                <line x1="16" x2="8" y1="17" y2="17"/>
+                                <line x1="10" x2="8" y1="9" y2="9"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{download.title}</p>
+                              <p className="text-xs text-muted-foreground">{download.size} • {download.type}</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                              <polyline points="7 10 12 15 17 10"/>
+                              <line x1="12" x2="12" y1="15" y2="3"/>
+                            </svg>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+          
+
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="subject" className="text-sm font-medium">
+                        Subject
+                      </label>
+                      <Input id="subject" required />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="category" className="text-sm font-medium">
+                        Category
+                      </label>
+                      <select 
+                        id="category" 
+                        className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary"
+                        required
+                      >
+                        <option value="">Select a category</option>
+                        <option value="account">Account Issues</option>
+                        <option value="billing">Billing & Payments</option>
+                        <option value="technical">Technical Support</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="message" className="text-sm font-medium">
+                        Message
+                      </label>
+                      <textarea 
+                        id="message" 
+                        rows={6} 
+                        className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary"
+                        required
+                      ></textarea>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="attach-files" 
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <label htmlFor="attach-files" className="text-sm text-muted-foreground">
+                        I'd like to attach files (screenshots, videos, etc.)
+                      </label>
+                    </div>
+                    
+                    <Button type="submit" className="w-full">
+                      Submit Support Request
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+              
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Other Ways to Get Help</CardTitle>
+                    <CardDescription>
+                      Alternative support channels
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
                       </div>
-                      <Separator />
                       <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article2">How to Spot a Deepfake: The Human Way</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Learn the visual cues that can help you identify deepfakes without AI assistance.
+                        <h3 className="font-medium mb-1">Phone Support</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Available Monday-Friday, 9am-5pm EST
                         </p>
+                        <p className="text-sm font-medium">+1 (800) 555-1234</p>
                       </div>
-                      <Separator />
-                      <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article3">Deepfakes and Digital Literacy: Staying Informed</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Why digital literacy is more important than ever in the age of AI-generated content.
-                        </p>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
                       </div>
-                      <Separator />
                       <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article4">The Legal Landscape of Synthetic Media</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          An exploration of the current and emerging legal frameworks around deepfakes.
+                        <h3 className="font-medium mb-1">Live Chat</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Chat with our support team in real-time
                         </p>
+                        <Button variant="outline" size="sm">
+                          Start Chat
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                          <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-medium mb-1">Email Support</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          We typically respond within 24 hours
+                        </p>
+                        <p className="text-sm font-medium">support@deepguardai.com</p>
                       </div>
                     </div>
                   </CardContent>
@@ -569,39 +655,41 @@ export default function HelpPage() {
                 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Newsletter</CardTitle>
-                    <CardDescription>
-                      Subscribe to receive the latest updates and resources
-                    </CardDescription>
+                    <CardTitle>Frequently Asked Support Questions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form className="space-y-4">
-                      <div className="space-y-2">
-                        <label htmlFor="email-subscribe" className="text-sm font-medium">
-                          Email Address
-                        </label>
-                        <Input 
-                          id="email-subscribe" 
-                          type="email" 
-                          placeholder="your@email.com" 
-                          required 
-                        />
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <input 
-                          type="checkbox" 
-                          id="newsletter-consent" 
-                          className="h-4 w-4 rounded border-gray-300 mt-1"
-                          required
-                        />
-                        <label htmlFor="newsletter-consent" className="text-sm text-muted-foreground">
-                          I agree to receive educational content, updates, and resources about deepfake detection and media verification.
-                        </label>
-                      </div>
-                      <Button className="w-full" type="submit">
-                        Subscribe
-                      </Button>
-                    </form>
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="account-settings-faq">
+                        <AccordionTrigger className="text-left">
+                          How can I update my account information?
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-muted-foreground">
+                            You can update your account information at any time by going to your Account Settings page. From there, you can change your email, password, and notification preferences.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                      <AccordionItem value="account-deletion-faq">
+                        <AccordionTrigger className="text-left">
+                          How can I delete my account?
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-muted-foreground">
+                            If you wish to delete your account, please contact our support team. We'll process your request within 7 business days and permanently remove all your data from our systems.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                      <AccordionItem value="account-faq">
+                        <AccordionTrigger className="text-left">
+                          I forgot my password. How do I reset it?
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-muted-foreground">
+                            You can reset your password by clicking the "Forgot Password" link on the login page. We'll send you an email with instructions to create a new password.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </CardContent>
                 </Card>
               </div>
