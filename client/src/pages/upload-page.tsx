@@ -104,7 +104,7 @@ export default function UploadPage() {
       
       // Redirect to analysis page after 1.5 seconds
       setTimeout(() => {
-        navigate(`/analysis/${data.id}`);
+        navigate(`/analysis/${data.videoId}`);
       }, 1500);
       
     } catch (error) {
