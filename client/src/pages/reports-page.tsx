@@ -150,7 +150,7 @@ export default function ReportsPage() {
   };
 
   // Filter reports based on search term and type
-  const filteredReports = generatedReports.filter((report: Report) => {
+  const filteredReports = generatedReports.filter(report => {
     const matchesSearch = 
       report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.type.toLowerCase().includes(searchTerm.toLowerCase());
@@ -316,8 +316,8 @@ export default function ReportsPage() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleExportReports(filteredReports, "all-reports")}
-                  disabled={isExporting || filteredReports.length === 0}
+                  onClick={() => handleExportReports(generatedReports, "all-reports")}
+                  disabled={isExporting || generatedReports.length === 0}
                 >
                   {isExporting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -354,8 +354,8 @@ export default function ReportsPage() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ) : filteredReports.length > 0 ? (
-                      filteredReports.map((report) => (
+                    ) : generatedReports.length > 0 ? (
+                      generatedReports.map((report) => (
                         <TableRow key={report.id} className="hover:bg-muted/30 transition-colors">
                           <TableCell className="font-mono text-xs">
                             {report.date}
