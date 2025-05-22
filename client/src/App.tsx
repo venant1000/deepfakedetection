@@ -13,10 +13,11 @@ import AdminUsersPage from "@/pages/admin-users-page.jsx";
 import AdminAnalyticsPage from "@/pages/admin-analytics-page.jsx";
 import AdminLogsPage from "@/pages/admin-logs-page";
 import AdminSettingsPage from "@/pages/admin-settings-page";
-import ReportsPage from "@/pages/reports-page.tsx";
-import ProfilePage from "@/pages/profile-page.tsx";
-import SettingsPage from "@/pages/settings-page.tsx";
-import HelpPage from "@/pages/help-page.tsx";
+import ReportsPage from "@/pages/reports-page";
+import ProfilePage from "@/pages/profile-page";
+import SettingsPage from "@/pages/settings-page";
+import HelpPage from "@/pages/help-page";
+import HistoryPage from "@/pages/history-page";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 import ChatbotWidget from "./components/shared/chatbot-widget";
@@ -29,6 +30,7 @@ function Router() {
       <ProtectedRoute path="/dashboard" component={DashboardPage} />
       <ProtectedRoute path="/upload" component={UploadPage} />
       <ProtectedRoute path="/analysis/:id" component={AnalysisPage} />
+      <ProtectedRoute path="/history" component={HistoryPage} />
       <ProtectedRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/admin/users" component={AdminUsersPage} />
       <ProtectedRoute path="/admin/analytics" component={AdminAnalyticsPage} />

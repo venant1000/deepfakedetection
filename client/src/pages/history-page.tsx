@@ -1,150 +1,506 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { VideoAnalysisResult } from "@shared/schema";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function HistoryPage() {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [analyses, setAnalyses] = useState<VideoAnalysisResult[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [resultFilter, setResultFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
+  
+  // Mock video analysis history data for demonstration
+  const analysisHistory = [
+    {
+      id: "vid123",
+      fileName: "news_interview.mp4",
+      uploadDate: "2025-05-21T14:32:18Z",
+      fileSize: 24.5,
+      duration: "2:45",
+      result: "deepfake",
+      confidence: 98.2,
+      thumbnail: "/thumbnails/video1.jpg"
+    },
+    {
+      id: "vid124",
+      fileName: "product_review.mp4",
+      uploadDate: "2025-05-20T10:15:42Z",
+      fileSize: 18.3,
+      duration: "3:12",
+      result: "authentic",
+      confidence: 95.7,
+      thumbnail: "/thumbnails/video2.jpg"
+    },
+    {
+      id: "vid125",
+      fileName: "speech_clip.mp4",
+      uploadDate: "2025-05-18T16:48:33Z",
+      fileSize: 12.1,
+      duration: "1:30",
+      result: "deepfake",
+      confidence: 89.4,
+      thumbnail: "/thumbnails/video3.jpg"
+    },
+    {
+      id: "vid126",
+      fileName: "viral_video.mp4",
+      uploadDate: "2025-05-15T09:22:11Z",
+      fileSize: 32.7,
+      duration: "4:18",
+      result: "authentic",
+      confidence: 97.1,
+      thumbnail: "/thumbnails/video4.jpg"
+    },
+    {
+      id: "vid127",
+      fileName: "testimony.mp4",
+      uploadDate: "2025-05-10T11:05:27Z",
+      fileSize: 28.2,
+      duration: "5:45",
+      result: "inconclusive",
+      confidence: 62.3,
+      thumbnail: "/thumbnails/video5.jpg"
+    },
+    {
+      id: "vid128",
+      fileName: "celebrity_interview.mp4",
+      uploadDate: "2025-05-08T13:42:19Z",
+      fileSize: 42.1,
+      duration: "8:20",
+      result: "deepfake",
+      confidence: 99.1,
+      thumbnail: "/thumbnails/video6.jpg"
+    },
+    {
+      id: "vid129",
+      fileName: "social_media_post.mp4",
+      uploadDate: "2025-05-05T17:33:52Z",
+      fileSize: 8.4,
+      duration: "0:45",
+      result: "inconclusive",
+      confidence: 58.2,
+      thumbnail: "/thumbnails/video7.jpg"
+    },
+    {
+      id: "vid130",
+      fileName: "press_conference.mp4",
+      uploadDate: "2025-05-02T15:11:08Z",
+      fileSize: 65.3,
+      duration: "12:34",
+      result: "authentic",
+      confidence: 96.8,
+      thumbnail: "/thumbnails/video8.jpg"
+    }
+  ];
 
-  useEffect(() => {
-    const fetchAnalyses = async () => {
-      try {
-        const response = await fetch("/api/videos", {
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch video history");
-        }
-
-        const data = await response.json();
-        setAnalyses(data);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Failed to load video history",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAnalyses();
-  }, [toast]);
-
-  // Format date helper
+  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+    return date.toLocaleDateString("en-US", { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Format time for display
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  // Get badge for analysis result
+  const getResultBadge = (result: string) => {
+    switch (result) {
+      case "deepfake":
+        return <Badge variant="destructive">{result}</Badge>;
+      case "authentic":
+        return <Badge variant="default" className="bg-green-500 hover:bg-green-600">{result}</Badge>;
+      case "inconclusive":
+        return <Badge variant="secondary">{result}</Badge>;
+      default:
+        return <Badge>{result}</Badge>;
+    }
+  };
+
+  // Filter history based on search term and filters
+  const filteredHistory = analysisHistory.filter(item => {
+    const matchesSearch = 
+      item.fileName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesResult = resultFilter === "all" || item.result === resultFilter;
+    
+    let matchesTime = true;
+    const itemDate = new Date(item.uploadDate);
+    const now = new Date();
+    
+    if (timeFilter === "today") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      matchesTime = itemDate >= today;
+    } else if (timeFilter === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      matchesTime = itemDate >= weekAgo;
+    } else if (timeFilter === "month") {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      matchesTime = itemDate >= monthAgo;
+    }
+    
+    return matchesSearch && matchesResult && matchesTime;
+  });
+
+  // Statistics from history data
+  const stats = {
+    totalAnalyses: analysisHistory.length,
+    deepfakes: analysisHistory.filter(item => item.result === "deepfake").length,
+    authentic: analysisHistory.filter(item => item.result === "authentic").length,
+    inconclusive: analysisHistory.filter(item => item.result === "inconclusive").length,
+    averageConfidence: Math.round(
+      analysisHistory.reduce((sum, item) => sum + item.confidence, 0) / analysisHistory.length
+    )
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar isAdmin={user?.role === "admin"} />
+    <div className="min-h-screen bg-background">
+      <Sidebar />
       
-      <div className="flex-1 ml-20 md:ml-64 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Analysis History</h1>
-            <Button onClick={() => navigate("/upload")} className="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-              Upload New Video
-            </Button>
+      <div className="ml-20 md:ml-64 p-6 pt-8 min-h-screen">
+        {/* Page Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold">Analysis History</h1>
+            <p className="text-muted-foreground">View your past video analyses and results</p>
           </div>
           
-          {isLoading ? (
-            <div className="glass rounded-xl p-16 text-center">
-              <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading your analysis history...</p>
-            </div>
-          ) : analyses.length === 0 ? (
-            <div className="glass rounded-xl p-16 text-center">
-              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-              </div>
-              <h2 className="text-xl font-semibold mb-2">No Analysis History</h2>
-              <p className="text-muted-foreground mb-6">You haven't analyzed any videos yet.</p>
-              <Button onClick={() => navigate("/upload")}>
-                Upload Your First Video
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {analyses.map((analysis) => (
-                <div
-                  key={analysis.id}
-                  className="glass rounded-xl overflow-hidden hover:border-primary transition-colors cursor-pointer"
-                  onClick={() => navigate(`/analysis/${analysis.id}`)}
-                >
-                  <div className="flex items-center p-4 md:p-6">
-                    <div className="flex-shrink-0 mr-4">
-                      <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                        analysis.analysis.isDeepfake
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-green-500/10 text-green-500"
-                      }`}>
-                        {analysis.analysis.isDeepfake ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold mb-1 truncate">
-                        {analysis.fileName.replace(/^[^-]+-/, '')}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                          {formatDate(analysis.uploadDate)}
-                        </div>
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                          {analysis.analysis.confidence.toFixed(1)}% confidence
-                        </div>
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                          {analysis.analysis.isDeepfake ? "Potential Deepfake" : "Authentic Video"}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="hidden md:flex items-center gap-4">
-                      {analysis.analysis.isDeepfake ? (
-                        <div className="px-3 py-1 bg-destructive/10 text-destructive text-xs font-medium rounded-full">
-                          Deepfake Detected
-                        </div>
-                      ) : (
-                        <div className="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-medium rounded-full">
-                          Authentic
-                        </div>
-                      )}
-                      
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="m9 18 6-6-6-6"/></svg>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <Button className="bg-gradient-to-r from-primary to-secondary text-black">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" x2="12" y1="15" y2="3"/>
+            </svg>
+            Export History
+          </Button>
         </div>
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-4 flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold">{stats.totalAnalyses}</span>
+              <span className="text-sm text-muted-foreground">Total Analyses</span>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold text-red-500">{stats.deepfakes}</span>
+              <span className="text-sm text-muted-foreground">Deepfakes Detected</span>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold text-green-500">{stats.authentic}</span>
+              <span className="text-sm text-muted-foreground">Authentic Videos</span>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold text-gray-400">{stats.inconclusive}</span>
+              <span className="text-sm text-muted-foreground">Inconclusive</span>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold">{stats.averageConfidence}%</span>
+              <span className="text-sm text-muted-foreground">Avg. Confidence</span>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="w-full md:w-1/3">
+            <Input 
+              placeholder="Search by filename..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          
+          <div className="w-full md:w-1/4">
+            <Select value={resultFilter} onValueChange={setResultFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by result" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Results</SelectItem>
+                <SelectItem value="deepfake">Deepfakes</SelectItem>
+                <SelectItem value="authentic">Authentic</SelectItem>
+                <SelectItem value="inconclusive">Inconclusive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-full md:w-1/4">
+            <Select value={timeFilter} onValueChange={setTimeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by time" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">Past Week</SelectItem>
+                <SelectItem value="month">Past Month</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Tabs defaultValue="table" className="w-full">
+          <TabsList className="mb-6 w-full md:w-auto">
+            <TabsTrigger value="table">Table View</TabsTrigger>
+            <TabsTrigger value="grid">Grid View</TabsTrigger>
+          </TabsList>
+          
+          {/* Table View */}
+          <TabsContent value="table">
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">File Name</TableHead>
+                      <TableHead className="w-[130px]">Date</TableHead>
+                      <TableHead className="w-[90px]">Size</TableHead>
+                      <TableHead className="w-[90px]">Duration</TableHead>
+                      <TableHead className="w-[120px]">Result</TableHead>
+                      <TableHead className="w-[120px]">Confidence</TableHead>
+                      <TableHead className="w-[120px] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredHistory.length > 0 ? (
+                      filteredHistory.map((analysis) => (
+                        <TableRow key={analysis.id} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="font-medium">
+                            {analysis.fileName}
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>{formatDate(analysis.uploadDate)}</div>
+                              <div className="text-muted-foreground">{formatTime(analysis.uploadDate)}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {analysis.fileSize} MB
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {analysis.duration}
+                          </TableCell>
+                          <TableCell>
+                            {getResultBadge(analysis.result)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-full bg-muted rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${
+                                    analysis.confidence > 90 ? 'bg-green-500' : 
+                                    analysis.confidence > 70 ? 'bg-yellow-500' : 'bg-red-500'
+                                  }`} 
+                                  style={{ width: `${analysis.confidence}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-medium">{analysis.confidence}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  window.location.href = `/analysis/${analysis.id}`;
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                  <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                  <polyline points="7 10 12 15 17 10"/>
+                                  <line x1="12" x2="12" y1="15" y2="3"/>
+                                </svg>
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"/>
+                                </svg>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          No analyses found matching your filters
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Grid View */}
+          <TabsContent value="grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredHistory.length > 0 ? (
+                filteredHistory.map((analysis) => (
+                  <Card key={analysis.id} className="overflow-hidden hover:border-primary/50 transition-colors cursor-pointer">
+                    <div 
+                      className="h-48 bg-muted/40 relative"
+                      style={{ 
+                        backgroundImage: `url(${analysis.thumbnail})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white opacity-80">
+                          <circle cx="12" cy="12" r="10"/>
+                          <polygon points="10 8 16 12 10 16 10 8"/>
+                        </svg>
+                      </div>
+                      <div className="absolute top-2 right-2">
+                        {getResultBadge(analysis.result)}
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-2">
+                        <div className="flex justify-between items-center">
+                          <span>{analysis.duration}</span>
+                          <span>{analysis.fileSize} MB</span>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 pr-2">
+                          <h3 className="font-medium truncate">{analysis.fileName}</h3>
+                          <p className="text-xs text-muted-foreground">{formatDate(analysis.uploadDate)}</p>
+                        </div>
+                        <div className="flex-shrink-0 h-8 w-8 rounded-full bg-muted/70 flex items-center justify-center text-primary">
+                          {analysis.result === "deepfake" ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                              <path d="M12 9v4"/>
+                              <path d="M12 17h.01"/>
+                            </svg>
+                          ) : analysis.result === "authentic" ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                              <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/>
+                              <path d="M12 8v4"/>
+                              <path d="M12 16h.01"/>
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <div className="text-xs font-medium flex justify-between mb-1">
+                          <span>Confidence</span>
+                          <span>{analysis.confidence}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-1.5">
+                          <div 
+                            className={`h-1.5 rounded-full ${
+                              analysis.confidence > 90 ? 'bg-green-500' : 
+                              analysis.confidence > 70 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`} 
+                            style={{ width: `${analysis.confidence}%` }}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                    <div className="px-4 pb-3 pt-0 flex justify-between border-t">
+                      <Button variant="ghost" size="sm" className="text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        View
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="7 10 12 15 17 10"/>
+                          <line x1="12" x2="12" y1="15" y2="3"/>
+                        </svg>
+                        Download
+                      </Button>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground mb-4">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.3-4.3"/>
+                  </svg>
+                  <h3 className="text-xl font-medium mb-2">No results found</h3>
+                  <p className="text-muted-foreground text-center max-w-md">
+                    We couldn't find any analysis history that matches your filters. Try changing your search criteria.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
