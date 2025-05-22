@@ -84,7 +84,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if video exists in our analysis database
       const videoId = req.params.videoId;
-      const videoAnalysis = await storage.getVideoAnalysis(videoId, req.user?.id);
+      const userId = req.user?.id || 0; // Provide default value if user ID is undefined
+      const videoAnalysis = await storage.getVideoAnalysis(videoId, userId);
       
       if (!videoAnalysis) {
         return res.status(404).send("Video not found");
@@ -92,8 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // In a real implementation, we would stream the actual video file
       // For demo, we embed a video in base64 format - in production we'd use real storage
-      const fs = require('fs');
-      const path = require('path');
+      // Use already imported fs and path modules instead of require
       
       // Use our demo video for all uploads in this prototype
       const videoPath = path.join(process.cwd(), 'public', 'sample.mp4');
@@ -156,9 +156,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fs.unlinkSync(tempVideoPath);
         }
         console.error("Deepfake analysis failed:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
         return res.status(500).json({ 
           message: "Failed to analyze video", 
-          error: error.message 
+          error: errorMessage 
         });
       }
       

@@ -139,7 +139,9 @@ def analyze_video(video_path):
             outputs = model(input_tensor)
             probabilities = torch.softmax(outputs, dim=1)
             deepfake_confidence = probabilities[0][1].item()  # Probability of being deepfake
-            is_deepfake_overall = deepfake_confidence > 0.5
+            
+            # More conservative threshold to reduce false positives
+            is_deepfake_overall = deepfake_confidence > 0.6
         
         # Create frame-by-frame results for visualization
         frame_results = []
@@ -155,30 +157,67 @@ def analyze_video(video_path):
         avg_confidence = deepfake_confidence
         max_confidence = deepfake_confidence
         
-        # Create timeline markers based on overall analysis
+        # Create timeline markers based on frame-by-frame analysis
         timeline = []
-        if deepfake_confidence > 0.7:
-            timeline.append({
-                "position": 50,  # Middle of video
-                "tooltip": f"High deepfake probability: {deepfake_confidence:.1%}",
-                "type": "danger"
-            })
-        elif deepfake_confidence > 0.4:
-            timeline.append({
-                "position": 50,  # Middle of video
-                "tooltip": f"Moderate probability: {deepfake_confidence:.1%}",
-                "type": "warning"
-            })
         
-        # Generate findings based on your model's results
+        # Create markers at different positions in the video based on individual frame analysis
+        for i, result in enumerate(frame_results):
+            conf = result["confidence"]
+            pos = int((i / (len(frame_results) - 1)) * 100)  # Convert to position percentage
+            
+            if conf > 0.7:
+                timeline.append({
+                    "position": pos,
+                    "tooltip": f"High deepfake probability: {conf:.1%}",
+                    "type": "danger"
+                })
+            elif conf > 0.4:
+                timeline.append({
+                    "position": pos,
+                    "tooltip": f"Moderate probability: {conf:.1%}",
+                    "type": "warning"
+                })
+            elif conf > 0.2:
+                timeline.append({
+                    "position": pos,
+                    "tooltip": f"Low deepfake probability: {conf:.1%}",
+                    "type": "normal"
+                })
+        
+        # Generate findings based on your model's results with more nuanced analysis
         findings = []
-        if max_confidence > 0.8:
+        
+        # Calculate how many frames were above different thresholds
+        high_conf_frames = sum(1 for result in frame_results if result["confidence"] > 0.7)
+        medium_conf_frames = sum(1 for result in frame_results if 0.4 < result["confidence"] <= 0.7)
+        low_conf_frames = sum(1 for result in frame_results if 0.2 < result["confidence"] <= 0.4)
+        
+        # Add findings based on the analysis
+        if high_conf_frames > 0:
             findings.append({
-                "title": "High Confidence Deepfake Detection",
+                "title": "Facial Manipulation Detection",
                 "icon": "AlertTriangle",
                 "severity": "high",
-                "timespan": "Overall video analysis",
-                "description": f"Your trained model detected deepfake with {max_confidence:.1%} confidence"
+                "timespan": f"{high_conf_frames} segments affected",
+                "description": f"Detected potential facial manipulation with {max_confidence:.1%} confidence in {high_conf_frames} analyzed segments"
+            })
+        
+        if medium_conf_frames > 0:
+            findings.append({
+                "title": "Moderate Signs of Manipulation",
+                "icon": "AlertCircle",
+                "severity": "medium",
+                "timespan": f"{medium_conf_frames} segments affected",
+                "description": f"Some inconsistencies detected in {medium_conf_frames} video segments with moderate confidence levels"
+            })
+            
+        if low_conf_frames > 0:
+            findings.append({
+                "title": "Slight Visual Anomalies",
+                "icon": "Info",
+                "severity": "low",
+                "timespan": f"{low_conf_frames} segments affected",
+                "description": f"Minor visual anomalies detected in {low_conf_frames} video segments, but these could be normal compression artifacts"
             })
         
         # Generate issues
