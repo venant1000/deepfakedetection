@@ -32,16 +32,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
-  // Serve uploaded videos
+  // Serve static files from public directory
+  app.use('/public', express.static('public'));
+  
+  // Create a simple video endpoint for demo purposes
   app.get("/uploads/:videoId", async (req, res) => {
     try {
-      // In a real implementation, we would retrieve the actual video file for this ID
-      // For now, we're using a placeholder SVG converted to a short video
-      // This is just for demonstration - in production we would stream the actual uploaded video
-      res.sendFile(process.cwd() + "/public/placeholder.svg");
+      // For demonstration purposes, we'll return a simple MP4 video stream
+      // In a production app, we would retrieve the specific video file for this ID from storage
+      res.setHeader('Content-Type', 'video/mp4');
+      
+      // Check if video exists in our analysis database
+      const videoId = req.params.videoId;
+      const videoAnalysis = await storage.getVideoAnalysis(videoId, req.user?.id);
+      
+      if (!videoAnalysis) {
+        return res.status(404).send("Video not found");
+      }
+      
+      // In a real implementation, we would stream the actual video file
+      // For demo, we embed a video in base64 format - in production we'd use real storage
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Use our demo video for all uploads in this prototype
+      const videoPath = path.join(process.cwd(), 'public', 'sample.mp4');
+      
+      // If we have a demo video, stream it
+      if (fs.existsSync(videoPath)) {
+        fs.createReadStream(videoPath).pipe(res);
+      } else {
+        // Fallback to a simple message if no video is available
+        res.status(404).send("Video file not available");
+      }
     } catch (error) {
       console.error("Error serving video file:", error);
-      res.status(404).send("Video not found");
+      res.status(500).send("Error processing video request");
     }
   });
 

@@ -85,7 +85,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
             {/* Actual video player */}
             <video 
               className="w-full h-full object-contain"
-              poster="/public/placeholder.svg"
+              src={analysis.videoUrl}
               ref={(video) => {
                 if (video) {
                   video.addEventListener('loadedmetadata', () => {
