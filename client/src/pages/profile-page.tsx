@@ -59,7 +59,7 @@ export default function ProfilePage() {
   // Security settings
   const [securitySettings, setSecuritySettings] = useState({
     twoFactorAuth: false,
-    loginNotifications: true,
+
     sessionTimeout: 30 // minutes
   });
 
@@ -521,41 +521,7 @@ export default function ProfilePage() {
                   </CardFooter>
                 </Card>
                 
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Login Activity</CardTitle>
-                    <CardDescription>
-                      Recent login sessions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">Current Session</p>
-                          <p className="text-sm text-muted-foreground">San Francisco, CA • Chrome on Windows</p>
-                        </div>
-                        <Badge variant="outline" className="bg-green-500 text-white">Active</Badge>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">Yesterday, 3:42 PM</p>
-                          <p className="text-sm text-muted-foreground">San Francisco, CA • Chrome on Windows</p>
-                        </div>
-                        <Badge variant="outline">Expired</Badge>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">May 19, 10:15 AM</p>
-                          <p className="text-sm text-muted-foreground">San Francisco, CA • Firefox on MacOS</p>
-                        </div>
-                        <Badge variant="outline">Expired</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+
               </div>
               
               <div>
@@ -579,24 +545,6 @@ export default function ProfilePage() {
                         checked={securitySettings.twoFactorAuth}
                         onCheckedChange={(checked) => 
                           setSecuritySettings(prev => ({ ...prev, twoFactorAuth: checked }))
-                        }
-                      />
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="loginNotifications">Login Notifications</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive alerts for new login attempts
-                        </p>
-                      </div>
-                      <Switch 
-                        id="loginNotifications"
-                        checked={securitySettings.loginNotifications}
-                        onCheckedChange={(checked) => 
-                          setSecuritySettings(prev => ({ ...prev, loginNotifications: checked }))
                         }
                       />
                     </div>
