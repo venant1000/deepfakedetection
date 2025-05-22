@@ -140,7 +140,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Run PyTorch deepfake analysis
       let analysisData;
       try {
+        console.log("Starting deepfake analysis for video:", tempVideoPath);
         analysisData = await runDeepfakeAnalysis(tempVideoPath);
+        console.log("Analysis completed. Results:", JSON.stringify(analysisData, null, 2));
         
         // Clean up temporary file after analysis
         fs.unlinkSync(tempVideoPath);
