@@ -163,6 +163,9 @@ export default function AnalysisPage() {
   const durationStr = analysis.analysis && analysis.analysis.processingTime ? 
     formatDuration(analysis.analysis.processingTime) : "0:00";
 
+  // Log the analysis data to help with debugging
+  console.log("Analysis data:", analysis);
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -182,7 +185,7 @@ export default function AnalysisPage() {
             </div>
             <p className="text-muted-foreground">
               {analysis.fileName} 
-              {analysis.fileSize ? ` • ${(analysis.fileSize / (1024 * 1024)).toFixed(1)} MB` : ''} 
+              {analysis.fileSize ? ` • ${((analysis.fileSize / 1024)).toFixed(0)} KB` : ''} 
               {durationStr !== "0:00" ? ` • ${durationStr} minutes` : ''} 
               {` • Analyzed ${formattedDate}`}
             </p>
