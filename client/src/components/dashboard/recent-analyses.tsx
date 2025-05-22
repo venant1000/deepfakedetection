@@ -75,7 +75,7 @@ export default function RecentAnalyses() {
     <div className="glass rounded-xl p-6 mb-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Recent Analyses</h2>
-        <a href="#view-all" className="text-primary text-sm hover:underline">View All</a>
+        <Link href="/history" className="text-primary text-sm hover:underline">View All</Link>
       </div>
       
       <div className="overflow-x-auto">
