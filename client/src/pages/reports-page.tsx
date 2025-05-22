@@ -27,11 +27,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function ReportsPage() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [reportType, setReportType] = useState("all");
+  const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
   
   // Mock data for demonstration
   const reports = [
@@ -127,6 +131,69 @@ export default function ReportsPage() {
     
     return matchesSearch && matchesType;
   });
+  
+  // Define report type
+  type Report = {
+    id: string;
+    date: string;
+    title: string;
+    type: string;
+    status?: string;
+    saved?: boolean;
+  };
+
+  // Function to handle exporting reports
+  const handleExportReports = (reportsToExport: Report[], title = "reports") => {
+    setIsExporting(true);
+    
+    try {
+      if (reportsToExport.length === 0) {
+        toast({
+          title: "No reports to export",
+          description: "There are no reports available to export.",
+          variant: "destructive"
+        });
+        setIsExporting(false);
+        return;
+      }
+      
+      // Create CSV content
+      const headers = ["Date", "Title", "Type", "Status"];
+      const csvContent = [
+        headers.join(","),
+        ...reportsToExport.map((report: Report) => [
+          report.date,
+          `"${report.title.replace(/"/g, '""')}"`, // Escape quotes in titles
+          report.type,
+          report.status || "completed"
+        ].join(","))
+      ].join("\n");
+      
+      // Create and download the file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `deepguard-${title}-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export successful",
+        description: `Your ${title} have been exported as a CSV file.`
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting your reports. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,13 +207,37 @@ export default function ReportsPage() {
             <p className="text-muted-foreground">Access and manage your reports</p>
           </div>
           
-          <Button className="bg-gradient-to-r from-primary to-secondary text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" x2="12" y1="15" y2="3"/>
-            </svg>
-            Generate New Report
+          <Button 
+            className="bg-gradient-to-r from-primary to-secondary text-black"
+            onClick={() => {
+              if (reports.length === 0) {
+                toast({
+                  title: "No analysis data",
+                  description: "You need to analyze videos before generating reports. Upload and analyze videos first.",
+                });
+                return;
+              }
+              
+              toast({
+                title: "Report Generated",
+                description: "A new report has been generated and added to your list.",
+              });
+            }}
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Generate New Report
+              </>
+            )}
           </Button>
         </div>
 
@@ -197,11 +288,32 @@ export default function ReportsPage() {
 
             {/* Reports Table */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Your Reports</CardTitle>
-                <CardDescription>
-                  Reports generated from your analyses and system data
-                </CardDescription>
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Your Reports</CardTitle>
+                  <CardDescription>
+                    Reports generated from your analyses and system data
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleExportReports(filteredReports, "all-reports")}
+                  disabled={isExporting || filteredReports.length === 0}
+                >
+                  {isExporting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" x2="12" y1="15" y2="3"/>
+                      </svg>
+                      Export
+                    </>
+                  )}
+                </Button>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
@@ -237,7 +349,15 @@ export default function ReportsPage() {
                                   <path d="M12 8h.01"/>
                                 </svg>
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  // Export individual report
+                                  handleExportReports([report], `report-${report.id}`);
+                                }}
+                              >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4"/>
                                   <path d="M17 9l-5 5-5-5"/>
@@ -270,11 +390,32 @@ export default function ReportsPage() {
           
           <TabsContent value="saved">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Saved Reports</CardTitle>
-                <CardDescription>
-                  Reports you've bookmarked for easy reference
-                </CardDescription>
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Saved Reports</CardTitle>
+                  <CardDescription>
+                    Reports you've bookmarked for easy reference
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleExportReports(savedReports, "saved-reports")}
+                  disabled={isExporting || savedReports.length === 0}
+                >
+                  {isExporting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" x2="12" y1="15" y2="3"/>
+                      </svg>
+                      Export
+                    </>
+                  )}
+                </Button>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
