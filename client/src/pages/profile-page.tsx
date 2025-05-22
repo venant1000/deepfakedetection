@@ -41,14 +41,7 @@ export default function ProfilePage() {
     sessionTimeout: 30 // minutes
   });
 
-  // Notification preferences
-  const [notificationPrefs, setNotificationPrefs] = useState({
-    emailNotifications: true,
-    analysisCompletionAlerts: true,
-    weeklyReportSummary: false,
-    securityAlerts: true,
-    marketingEmails: false
-  });
+  // No longer need notification preferences with the notifications section removed
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -345,23 +338,7 @@ export default function ProfilePage() {
                     
                     <Separator />
                     
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="loginNotifications">Login Notifications</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive email alerts for new login activity
-                        </p>
-                      </div>
-                      <Switch 
-                        id="loginNotifications" 
-                        checked={securitySettings.loginNotifications}
-                        onCheckedChange={(checked) => 
-                          setSecuritySettings(prev => ({ ...prev, loginNotifications: checked }))
-                        }
-                      />
-                    </div>
-                    
-                    <Separator />
+
                     
                     <Button variant="outline" className="w-full">
                       Export Account Data
@@ -378,94 +355,7 @@ export default function ProfilePage() {
           
 
           
-          {/* API Access Tab */}
-          <TabsContent value="api">
-            <Card>
-              <CardHeader>
-                <CardTitle>API Access</CardTitle>
-                <CardDescription>
-                  Manage your API keys and developer access
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-muted p-4 rounded-md">
-                  <h3 className="text-md font-medium mb-2">Your API Key</h3>
-                  <div className="flex gap-2">
-                    <Input 
-                      value="••••••••••••••••••••••••••••••"
-                      disabled
-                      className="font-mono"
-                    />
-                    <Button variant="outline">
-                      Show
-                    </Button>
-                    <Button variant="outline">
-                      Copy
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Never share your API key. You can regenerate it if it gets compromised.
-                  </p>
-                </div>
-                
-                <div className="flex justify-between">
-                  <Button variant="outline">
-                    Regenerate Key
-                  </Button>
-                  <Button variant="destructive">
-                    Revoke Access
-                  </Button>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="text-md font-medium mb-4">API Usage Stats</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium">Monthly Quota</span>
-                        <span className="text-sm text-muted-foreground">346 / 500 requests</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2.5">
-                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '69%' }}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-muted/50 p-4 rounded-md text-center">
-                        <p className="text-2xl font-semibold">346</p>
-                        <p className="text-sm text-muted-foreground">Requests This Month</p>
-                      </div>
-                      <div className="bg-muted/50 p-4 rounded-md text-center">
-                        <p className="text-2xl font-semibold">1.2s</p>
-                        <p className="text-sm text-muted-foreground">Average Response Time</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="text-md font-medium mb-4">Documentation</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Access our comprehensive API documentation to integrate with our deepfake detection services.
-                  </p>
-                  <Button variant="outline">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="16" y1="13" x2="8" y2="13"/>
-                      <line x1="16" y1="17" x2="8" y2="17"/>
-                      <polyline points="10 9 9 9 8 9"/>
-                    </svg>
-                    View API Documentation
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
         </Tabs>
       </div>
     </div>
