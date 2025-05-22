@@ -64,44 +64,48 @@ export default function AdminAnalyticsPage() {
         }
 
         const data = await response.json();
-        setStats(data);
+        
+        // Check if we're receiving the new format with proper database stats
+        if (data.summary) {
+          // Transform to match our expected state format
+          setStats({
+            totalUsers: data.summary.totalUsers || 0,
+            totalVideos: data.summary.videoCount || 0,
+            deepfakeCount: data.summary.deepfakesDetected || 0,
+            // For recent activity, we'll have to rely on other data
+            recentActivity: [],
+            // Map the DB data
+            videosByDay: data.dailyUploads.map(item => ({
+              date: item.date,
+              count: item.count,
+              deepfakes: 0 // This data isn't available in our new format
+            })),
+            detectionAccuracy: data.detectionTypes.map(item => ({
+              name: item.name,
+              value: item.value
+            })),
+            userGrowth: data.userGrowth.map(item => ({
+              month: item.date,
+              users: item.users
+            }))
+          });
+        } else {
+          // Just use the data directly if it's already in the expected format
+          setStats(data);
+        }
+        
+        console.log("Analytics data loaded from database:", data);
       } catch (error) {
         console.error("Error fetching analytics:", error);
-        
-        // Use sample data for demonstration
+        // Don't use sample data anymore - show real database stats only
         setStats({
-          totalUsers: 67,
-          totalVideos: 392,
-          deepfakeCount: 174,
-          recentActivity: [
-            { id: 1, username: "user123", action: "Video analysis", timestamp: "2023-05-10T14:32:00Z", result: "Deepfake detected" },
-            { id: 2, username: "analyst42", action: "Profile update", timestamp: "2023-05-10T13:15:00Z", result: "Profile updated" },
-            { id: 3, username: "security_expert", action: "Video analysis", timestamp: "2023-05-10T12:08:00Z", result: "Authentic video" },
-            { id: 4, username: "media_team", action: "Video analysis", timestamp: "2023-05-10T11:47:00Z", result: "Deepfake detected" },
-            { id: 5, username: "journalist99", action: "Account created", timestamp: "2023-05-10T10:22:00Z", result: "New user" }
-          ],
-          videosByDay: [
-            { date: "May 4", count: 32, deepfakes: 14 },
-            { date: "May 5", count: 28, deepfakes: 11 },
-            { date: "May 6", count: 41, deepfakes: 19 },
-            { date: "May 7", count: 45, deepfakes: 22 },
-            { date: "May 8", count: 37, deepfakes: 16 },
-            { date: "May 9", count: 53, deepfakes: 25 },
-            { date: "May 10", count: 48, deepfakes: 21 },
-          ],
-          detectionAccuracy: [
-            { name: "True Positives", value: 163 },
-            { name: "False Positives", value: 11 },
-            { name: "True Negatives", value: 214 },
-            { name: "False Negatives", value: 4 },
-          ],
-          userGrowth: [
-            { month: "Jan", users: 12 },
-            { month: "Feb", users: 19 },
-            { month: "Mar", users: 24 },
-            { month: "Apr", users: 37 },
-            { month: "May", users: 67 },
-          ]
+          totalUsers: 0,
+          totalVideos: 0,
+          deepfakeCount: 0,
+          recentActivity: [],
+          videosByDay: [],
+          detectionAccuracy: [],
+          userGrowth: []
         });
       } finally {
         setIsLoading(false);
