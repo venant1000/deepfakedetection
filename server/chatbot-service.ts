@@ -3,8 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize the Google Generative AI with the API key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Get the Gemini Pro model
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+// Get the Gemini Pro model (1.0 version)
+const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro' });
 
 // System prompt that guides the model to focus on deepfake-related questions
 const SYSTEM_PROMPT = `

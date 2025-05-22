@@ -36,7 +36,8 @@ export async function processDeepfakeQuery(userMessage: string): Promise<string>
     
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use the gemini-1.0-pro model which is the latest stable model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
     
     // Create a context-aware prompt that includes our guidelines
     const prompt = `
@@ -71,7 +72,8 @@ export async function getDeepfakeTips(): Promise<string[]> {
     
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use the gemini-1.0-pro model which is the latest stable model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
     
     const prompt = "Provide 5 short, practical tips for detecting deepfakes in videos. Make each tip 1-2 sentences only.";
     
