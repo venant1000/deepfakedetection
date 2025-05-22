@@ -37,7 +37,7 @@ export default function ProfilePage() {
     email: "user@example.com",
     bio: "Deepfake detection enthusiast and tech advocate. Working to make the internet safer through AI-powered media analysis.",
     organization: "Media Truth Initiative",
-    location: "San Francisco, CA",
+
     website: "https://example.com"
   });
   
@@ -349,26 +349,14 @@ export default function ProfilePage() {
                       </p>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="organization">Organization</Label>
-                        <Input 
-                          id="organization" 
-                          name="organization"
-                          value={profileData.organization}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input 
-                          id="location" 
-                          name="location"
-                          value={profileData.location}
-                          onChange={handleInputChange}
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="organization">Organization</Label>
+                      <Input 
+                        id="organization" 
+                        name="organization"
+                        value={profileData.organization}
+                        onChange={handleInputChange}
+                      />
                     </div>
                     
                     <div className="space-y-2">
