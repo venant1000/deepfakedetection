@@ -81,48 +81,26 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
         <div>
           <h3 className="text-lg font-medium mb-3">Original Video</h3>
           <div className="aspect-video rounded-lg bg-black flex items-center justify-center relative">
-            {/* Simple video player - In a real app, we would display the actual uploaded video */}
-            <div className="relative w-full h-full">
-              {!isPlaying ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="48" 
-                    height="48" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className="mb-2 mx-auto"
-                  >
-                    <polygon points="5 3 19 12 5 21 5 3"/>
-                  </svg>
-                  <span>Click to play video</span>
-                </div>
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-black/80 to-black/90 flex items-center justify-center">
-                  <div className="animate-pulse flex flex-col items-center justify-center">
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="64" 
-                      height="64" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="1" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      className="text-primary/40"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 6v6l4 2" />
-                    </svg>
-                    <span className="text-muted-foreground mt-2">Video playing</span>
-                  </div>
-                </div>
-              )}
+            {/* Video placeholder */}
+            <div className="text-muted-foreground">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="48" 
+                height="48" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="mb-2 mx-auto"
+              >
+                <path d="m22 8-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/>
+                <path d="M10 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                <path d="m22 16-5.23-5.23a1 1 0 0 0-1.41 0L12 14.12l-1.36-1.36a1 1 0 0 0-1.41 0L2 20"/>
+              </svg>
+              <span>Video Player</span>
             </div>
             
             {/* Playback controls */}
@@ -249,7 +227,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
         </div>
       </div>
       
-      {/* Anomaly Timeline */}
+      {/* Timeline */}
       <div className="mt-8">
         <h3 className="text-lg font-medium mb-4">Anomaly Timeline</h3>
         <div className="relative">
@@ -266,22 +244,13 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
             ></div>
             
             {/* Timeline markers */}
-            {analysis.timeline && analysis.timeline.map((marker, index) => (
+            {analysis.timeline.map((marker, index) => (
               <div 
                 key={index}
                 className={`timeline-marker ${marker.type === 'warning' ? 'warning' : marker.type === 'danger' ? 'danger' : ''}`}
                 style={{ left: `${marker.position}%` }}
               >
-                <div className="timeline-tooltip">
-                  <div className="font-medium">{marker.tooltip}</div>
-                  <div className="text-xs opacity-80">
-                    {marker.type === 'danger' 
-                      ? 'Critical issue detected - High confidence' 
-                      : marker.type === 'warning' 
-                      ? 'Potential anomaly - Medium confidence' 
-                      : 'Info point - Reference only'}
-                  </div>
-                </div>
+                <div className="timeline-tooltip">{marker.tooltip}</div>
               </div>
             ))}
           </div>
