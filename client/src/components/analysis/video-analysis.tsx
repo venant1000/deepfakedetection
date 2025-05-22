@@ -3,20 +3,16 @@ import { useEffect, useState, useRef } from "react";
 interface TimelineMarker {
   position: number;
   tooltip: string;
-  type: string;
+  type: "normal" | "warning" | "danger";
 }
 
 interface VideoAnalysisProps {
   analysis: {
-    timeline?: TimelineMarker[];
-    isDeepfake: boolean;
-    confidence: number;
-    processingTime?: number;
+    timeline: TimelineMarker[];
   };
-  fileName: string;
 }
 
-export default function VideoAnalysis({ analysis, fileName }: VideoAnalysisProps) {
+export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
   const [progressPosition, setProgressPosition] = useState(35);
   const timelineRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState("1:18");
@@ -75,9 +71,9 @@ export default function VideoAnalysis({ analysis, fileName }: VideoAnalysisProps
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Original Video */}
         <div>
-          <h3 className="text-lg font-medium mb-3">Original Video: {fileName}</h3>
+          <h3 className="text-lg font-medium mb-3">Original Video</h3>
           <div className="aspect-video rounded-lg bg-black flex items-center justify-center relative">
-            {/* Video player */}
+            {/* Video placeholder */}
             <div className="text-muted-foreground">
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -96,8 +92,7 @@ export default function VideoAnalysis({ analysis, fileName }: VideoAnalysisProps
                 <path d="M10 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
                 <path d="m22 16-5.23-5.23a1 1 0 0 0-1.41 0L12 14.12l-1.36-1.36a1 1 0 0 0-1.41 0L2 20"/>
               </svg>
-              <span className="block text-center">Video Player for {fileName}</span>
-              <p className="text-xs text-center mt-2">Analysis confidence: {analysis.confidence}%</p>
+              <span>Video Player</span>
             </div>
             
             {/* Playback controls */}
@@ -210,28 +205,15 @@ export default function VideoAnalysis({ analysis, fileName }: VideoAnalysisProps
             ></div>
             
             {/* Timeline markers */}
-            {analysis.timeline && analysis.timeline.length > 0 ? (
-              analysis.timeline.map((marker, index) => (
-                <div 
-                  key={index}
-                  className={`timeline-marker ${marker.type === 'warning' ? 'warning' : marker.type === 'danger' ? 'danger' : ''}`}
-                  style={{ left: `${marker.position}%` }}
-                >
-                  <div className="timeline-tooltip">{marker.tooltip}</div>
-                </div>
-              ))
-            ) : (
-              // Default markers if no timeline data is available
-              [15, 35, 50, 75].map((position, index) => (
-                <div 
-                  key={index}
-                  className={`timeline-marker ${index % 2 ? 'warning' : ''}`}
-                  style={{ left: `${position}%` }}
-                >
-                  <div className="timeline-tooltip">Marker at {position}%</div>
-                </div>
-              ))
-            )}
+            {analysis.timeline.map((marker, index) => (
+              <div 
+                key={index}
+                className={`timeline-marker ${marker.type === 'warning' ? 'warning' : marker.type === 'danger' ? 'danger' : ''}`}
+                style={{ left: `${marker.position}%` }}
+              >
+                <div className="timeline-tooltip">{marker.tooltip}</div>
+              </div>
+            ))}
           </div>
           
           {/* Time markers */}
