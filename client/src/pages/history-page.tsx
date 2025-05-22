@@ -502,13 +502,25 @@ export default function HistoryPage() {
           {/* Grid View */}
           <TabsContent value="grid">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredHistory.length > 0 ? (
+              {isLoading ? (
+                // Loading skeleton cards for grid view
+                Array(8).fill(0).map((_, index) => (
+                  <Card key={`loading-grid-${index}`} className="overflow-hidden">
+                    <div className="h-48 bg-muted/40 relative">
+                      <div className="animate-pulse bg-muted h-full w-full"></div>
+                      <div className="absolute top-2 right-2">
+                        <div className="animate-pulse h-6 w-20 bg-muted/80 rounded-full"></div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              ) : filteredHistory.length > 0 ? (
                 filteredHistory.map((analysis) => (
                   <Card key={analysis.id} className="overflow-hidden hover:border-primary/50 transition-colors cursor-pointer">
                     <div 
                       className="h-48 bg-muted/40 relative"
                       style={{ 
-                        backgroundImage: `url(${analysis.thumbnail})`,
+                        backgroundImage: `url(${analysis.thumbnail || '/thumbnails/default.jpg'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                       }}
@@ -524,8 +536,8 @@ export default function HistoryPage() {
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-2">
                         <div className="flex justify-between items-center">
-                          <span>{analysis.duration}</span>
-                          <span>{analysis.fileSize} MB</span>
+                          <span>{analysis.duration || 'N/A'}</span>
+                          <span>{analysis.fileSize ? `${analysis.fileSize} MB` : 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -573,14 +585,44 @@ export default function HistoryPage() {
                       </div>
                     </CardContent>
                     <div className="px-4 pb-3 pt-0 flex justify-between border-t">
-                      <Button variant="ghost" size="sm" className="text-xs">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-xs"
+                        onClick={() => {
+                          window.location.href = `/analysis/${analysis.id}`;
+                        }}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                           <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
                           <circle cx="12" cy="12" r="3"/>
                         </svg>
                         View
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-xs">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-xs"
+                        onClick={() => {
+                          // Download individual analysis data
+                          const data = videoAnalyses?.find(v => v.id === analysis.id);
+                          if (data) {
+                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", url);
+                            link.setAttribute("download", `analysis-${data.id}.json`);
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            toast({
+                              title: "Download successful",
+                              description: `Analysis data for ${data.fileName} has been downloaded.`
+                            });
+                          }
+                        }}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                           <polyline points="7 10 12 15 17 10"/>
