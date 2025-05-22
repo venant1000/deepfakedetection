@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.models as models
 import cv2
 import numpy as np
 import json
@@ -10,85 +12,148 @@ from torchvision import transforms
 from PIL import Image
 
 class LightweightDeepfakeDetector(nn.Module):
-    def __init__(self, num_classes=2):
+    def __init__(self, cnn_backbone='mobilenet_v2', rnn_type='lstm', hidden_size=256,
+                 num_layers=1, num_classes=2, dropout=0.3):
         super(LightweightDeepfakeDetector, self).__init__()
-        # Your model has a more complex CNN-RNN architecture
-        # We'll load the exact architecture from your trained model
-        pass
-    
+        
+        # Load pretrained CNN backbone for per-frame feature extraction
+        if cnn_backbone == 'mobilenet_v2':
+            cnn = models.mobilenet_v2(pretrained=True)
+            # Use only the feature extractor part
+            self.cnn = cnn.features
+            cnn_out_features = 1280  # MobileNetV2's final feature size
+        elif cnn_backbone == 'resnet18':
+            cnn = models.resnet18(pretrained=True)
+            # Remove the final classification layer
+            modules = list(cnn.children())[:-1]
+            self.cnn = nn.Sequential(*modules)
+            cnn_out_features = 512
+        else:
+            raise ValueError(f"Unsupported CNN backbone: {cnn_backbone}")
+        
+        # Define the RNN for temporal sequence processing
+        self.rnn_type = rnn_type.lower()
+        if self.rnn_type == 'lstm':
+            self.rnn = nn.LSTM(input_size=cnn_out_features, hidden_size=hidden_size,
+                               num_layers=num_layers, batch_first=True,
+                               dropout=dropout if num_layers > 1 else 0)
+        elif self.rnn_type == 'gru':
+            self.rnn = nn.GRU(input_size=cnn_out_features, hidden_size=hidden_size,
+                              num_layers=num_layers, batch_first=True,
+                              dropout=dropout if num_layers > 1 else 0)
+        else:
+            raise ValueError(f"Unsupported RNN type: {rnn_type}")
+        
+        # Final classification layer
+        self.classifier = nn.Linear(hidden_size, num_classes)
+
     def forward(self, x):
-        # Forward pass will be handled by the loaded state dict
-        pass
+        """
+        x: Tensor of shape (batch_size, sequence_length, channels, height, width)
+        """
+        batch_size, seq_len, C, H, W = x.size()
+        # Merge batch and sequence dimensions for CNN processing
+        x = x.view(batch_size * seq_len, C, H, W)
+        features = self.cnn(x)
+        
+        # If the CNN outputs a feature map, apply adaptive pooling to get a fixed-size vector
+        if features.ndim == 4:  # (batch_size*seq_len, channels, H, W)
+            features = F.adaptive_avg_pool2d(features, (1, 1))
+            features = features.view(batch_size, seq_len, -1)
+        else:
+            features = features.view(batch_size, seq_len, -1)
+        
+        # Process the sequence of features with the RNN
+        rnn_out, _ = self.rnn(features)
+        # Use the last output of the RNN for classification
+        final_feature = rnn_out[:, -1, :]
+        out = self.classifier(final_feature)
+        return out
 
 def analyze_video(video_path):
     try:
-        # Since we don't know the exact architecture of your model,
-        # we'll use a simple frame-based analysis approach with basic image features
-        # This will give us real results based on your video content
+        # Load your actual trained model with correct architecture
         device = torch.device("cpu")
         
-        # We can't load the exact model without knowing its architecture,
-        # but we can analyze the video frames using computer vision techniques
-        # to provide genuine analysis results
+        # Initialize model with your exact configuration from config.yaml
+        model = LightweightDeepfakeDetector(
+            cnn_backbone='mobilenet_v2',
+            rnn_type='lstm', 
+            hidden_size=256,
+            num_layers=1,
+            num_classes=2,
+            dropout=0.3
+        )
         
-        # Define transform
+        # Load your trained model weights
+        model_path = os.path.join(os.path.dirname(__file__), "..", "attached_assets", "lightweight_deepfake_detector.pth")
+        checkpoint = torch.load(model_path, map_location=device)
+        model.load_state_dict(checkpoint)
+        model.eval()
+        
+        # Define transform to match your training configuration
         transform = transforms.Compose([
-            transforms.Resize((224, 224)),
+            transforms.Resize((224, 224)),  # From your config: frame_height/width: 224
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         
-        # Extract frames from video
+        # Extract frames from video for sequence analysis (matching your training approach)
         cap = cv2.VideoCapture(video_path)
-        frames = []
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         fps = cap.get(cv2.CAP_PROP_FPS)
         
-        # Sample up to 10 frames
-        step = max(1, frame_count // 10)
-        frame_idx = 0
+        # Extract 10 frames for sequence analysis (matching your config: sequence_length: 10)
+        sequence_length = 10
+        step = max(1, frame_count // sequence_length)
         
-        while cap.isOpened() and len(frames) < 10:
+        frame_sequence = []
+        frame_idx = 0
+        timestamps = []
+        
+        while cap.isOpened() and len(frame_sequence) < sequence_length:
             ret, frame = cap.read()
             if not ret:
                 break
             
             if frame_idx % step == 0:
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frames.append((frame_rgb, frame_idx / fps))
+                pil_frame = Image.fromarray(frame_rgb)
+                frame_tensor = transform(pil_frame)
+                frame_sequence.append(frame_tensor)
+                timestamps.append(frame_idx / fps)
             
             frame_idx += 1
         
         cap.release()
         
-        if not frames:
-            return {"error": "Could not extract frames from video"}
+        if len(frame_sequence) < sequence_length:
+            # Pad sequence if we don't have enough frames
+            while len(frame_sequence) < sequence_length:
+                frame_sequence.append(frame_sequence[-1])  # Repeat last frame
         
-        # Analyze frames with your model
-        deepfake_scores = []
+        # Prepare input tensor for your model: (1, sequence_length, C, H, W)
+        input_tensor = torch.stack(frame_sequence).unsqueeze(0).to(device)
+        
+        # Run your trained model on the video sequence
+        with torch.no_grad():
+            outputs = model(input_tensor)
+            probabilities = torch.softmax(outputs, dim=1)
+            deepfake_confidence = probabilities[0][1].item()  # Probability of being deepfake
+            is_deepfake_overall = deepfake_confidence > 0.5
+        
+        # Create frame-by-frame results for visualization
         frame_results = []
+        for i, timestamp in enumerate(timestamps):
+            frame_results.append({
+                "frame_index": i,
+                "timestamp": timestamp,
+                "confidence": deepfake_confidence,  # Your model gives overall confidence
+                "is_deepfake": is_deepfake_overall
+            })
         
-        for i, (frame, timestamp) in enumerate(frames):
-            pil_frame = Image.fromarray(frame)
-            input_tensor = transform(pil_frame).unsqueeze(0).to(device)
-            
-            with torch.no_grad():
-                outputs = model(input_tensor)
-                probabilities = torch.softmax(outputs, dim=1)
-                confidence = probabilities[0][1].item()  # Deepfake probability
-                deepfake_scores.append(confidence)
-                
-                frame_results.append({
-                    "frame_index": i,
-                    "timestamp": timestamp,
-                    "confidence": confidence,
-                    "is_deepfake": confidence > 0.5
-                })
-        
-        # Calculate overall results
-        avg_confidence = np.mean(deepfake_scores)
-        max_confidence = np.max(deepfake_scores)
-        is_deepfake_overall = avg_confidence > 0.5
+        # Use results from your trained model
+        avg_confidence = deepfake_confidence
+        max_confidence = deepfake_confidence
         
         # Create timeline markers
         timeline = []
