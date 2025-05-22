@@ -1,14 +1,18 @@
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, Info } from "lucide-react";
+import { Loader2, AlertCircle, Info, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface TimelineMarker {
   position: number;
   tooltip: string;
   type: "normal" | "warning" | "danger";
   analysis?: string; // Gemini-powered detailed analysis
+  frameIndex?: number; // Frame index from analysis
+  confidence?: number; // Confidence score for this frame
+  timestamp?: number; // Timestamp in the video
 }
 
 interface VideoAnalysisProps {
@@ -49,11 +53,26 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
     try {
       setLoadingMarkerDetails(prev => ({ ...prev, [index]: true }));
       
-      // Format timestamp for the marker
-      const totalSecondsAtPosition = Math.floor((marker.position/100) * totalSeconds);
-      const minutes = Math.floor(totalSecondsAtPosition / 60);
-      const seconds = totalSecondsAtPosition % 60;
-      const timestamp = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      // Get timestamp for the marker - use the marker's actual timestamp or calculate it
+      let formattedTimestamp = "";
+      
+      if (marker.timestamp !== undefined) {
+        // If we have the actual timestamp from the frame analysis
+        const minutes = Math.floor(marker.timestamp / 60);
+        const seconds = Math.floor(marker.timestamp % 60);
+        formattedTimestamp = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      } else {
+        // Calculate based on position (fallback)
+        const totalSecondsAtPosition = Math.floor((marker.position/100) * totalSeconds);
+        const minutes = Math.floor(totalSecondsAtPosition / 60);
+        const seconds = totalSecondsAtPosition % 60;
+        formattedTimestamp = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+      
+      // Include confidence information in the analysis request
+      const confidenceInfo = marker.confidence ? 
+        `with confidence score ${(marker.confidence * 100).toFixed(1)}%` : 
+        '';
       
       // Make API request to get the detailed analysis
       const response = await fetch('/api/analyze-timeline-marker', {
@@ -64,7 +83,9 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
         body: JSON.stringify({
           markerType: marker.type,
           markerTooltip: marker.tooltip,
-          timestamp
+          timestamp: formattedTimestamp,
+          frameIndex: marker.frameIndex,
+          confidence: marker.confidence
         }),
         credentials: 'include'
       });
@@ -497,11 +518,27 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
                     </div>
                     
                     <div className="text-sm font-medium mb-1">
-                      {marker.tooltip}
+                      Frame {marker.frameIndex !== undefined ? marker.frameIndex + 1 : 'N/A'}
+                    </div>
+                    
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-xs text-muted-foreground">
+                        Timestamp: {markerTimestamp}
+                      </div>
+                      
+                      {marker.confidence !== undefined && (
+                        <Badge className={`${
+                          marker.type === 'danger' ? 'bg-[#ff3366]/10 text-[#ff3366]' : 
+                          marker.type === 'warning' ? 'bg-[#ffbb00]/10 text-[#ffbb00]' : 
+                          'bg-primary/10 text-primary'
+                        }`}>
+                          <span className="font-mono">{(marker.confidence * 100).toFixed(1)}%</span>
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="text-xs text-muted-foreground mb-2">
-                      Timestamp: {markerTimestamp}
+                      {marker.tooltip}
                     </div>
                     
                     {marker.analysis ? (

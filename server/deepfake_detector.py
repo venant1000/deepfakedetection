@@ -146,18 +146,34 @@ class DeepfakeAnalyzer:
                     "confidence": confidence
                 })
                 
-                # Create timeline markers for significant detections
+                # Create timeline markers for each analyzed frame
+                # Each marker represents a specific frame with its confidence score
                 if confidence > 0.7:
                     timeline_markers.append({
                         "position": (timestamp / (total_frames / fps)) * 100,
                         "tooltip": f"High deepfake probability: {confidence:.1%}",
-                        "type": "danger"
+                        "type": "danger",
+                        "frameIndex": i,
+                        "timestamp": timestamp,
+                        "confidence": confidence
                     })
                 elif confidence > 0.4:
                     timeline_markers.append({
                         "position": (timestamp / (total_frames / fps)) * 100,
                         "tooltip": f"Moderate deepfake probability: {confidence:.1%}",
-                        "type": "warning"
+                        "type": "warning",
+                        "frameIndex": i,
+                        "timestamp": timestamp,
+                        "confidence": confidence
+                    })
+                else:
+                    timeline_markers.append({
+                        "position": (timestamp / (total_frames / fps)) * 100,
+                        "tooltip": f"Low deepfake probability: {confidence:.1%}",
+                        "type": "normal",
+                        "frameIndex": i,
+                        "timestamp": timestamp,
+                        "confidence": confidence
                     })
             
             # Calculate overall statistics
