@@ -94,6 +94,7 @@ export default function UploadPage() {
       }
 
       const data = await response.json();
+      console.log("Upload response data:", data);
       setUploadProgress(100);
       setUploadStatus("success");
       
@@ -103,9 +104,18 @@ export default function UploadPage() {
       });
       
       // Redirect to analysis page after 1.5 seconds
-      setTimeout(() => {
-        navigate(`/analysis/${data.videoId}`);
-      }, 1500);
+      if (data.videoId) {
+        setTimeout(() => {
+          console.log("Redirecting to:", `/analysis/${data.videoId}`);
+          navigate(`/analysis/${data.videoId}`);
+        }, 1500);
+      } else {
+        toast({
+          title: "Error with analysis",
+          description: "Could not get video ID for analysis",
+          variant: "destructive"
+        });
+      }
       
     } catch (error) {
       clearInterval(progressInterval);
