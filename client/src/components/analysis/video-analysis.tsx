@@ -3,13 +3,17 @@ import { useEffect, useState, useRef } from "react";
 interface TimelineMarker {
   position: number;
   tooltip: string;
-  type: "normal" | "warning" | "danger";
+  type: string;
 }
 
 interface VideoAnalysisProps {
   analysis: {
-    timeline: TimelineMarker[];
+    timeline?: TimelineMarker[];
+    isDeepfake: boolean;
+    confidence: number;
+    processingTime?: number;
   };
+  fileName: string;
 }
 
 export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {

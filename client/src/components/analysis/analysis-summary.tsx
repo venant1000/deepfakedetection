@@ -2,10 +2,12 @@ interface AnalysisSummaryProps {
   analysis: {
     isDeepfake: boolean;
     confidence: number;
-    issues: {
+    issues?: {
       type: string;
       text: string;
     }[];
+    processingTime?: number;
+    findings?: any[];
   };
 }
 
@@ -34,27 +36,43 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
           <div className="mb-6">
             <h3 className="font-medium mb-3">Key Issues Detected:</h3>
             <ul className="space-y-2 text-muted-foreground">
-              {analysis.issues.map((issue, index) => (
-                <li key={index} className="flex items-start gap-2">
+              {analysis.issues && analysis.issues.length > 0 ? (
+                analysis.issues.map((issue, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="12" 
+                      height="12" 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor" 
+                      className={`mt-1.5 ${
+                        issue.type === 'error' 
+                          ? 'text-[#ff3366]' 
+                          : issue.type === 'warning' 
+                          ? 'text-[#ffbb00]' 
+                          : 'text-primary'
+                      }`}
+                    >
+                      <circle cx="12" cy="12" r="12" />
+                    </svg>
+                    <span>{issue.text}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="flex items-start gap-2">
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
                     width="12" 
                     height="12" 
                     viewBox="0 0 24 24" 
                     fill="currentColor" 
-                    className={`mt-1.5 ${
-                      issue.type === 'error' 
-                        ? 'text-[#ff3366]' 
-                        : issue.type === 'warning' 
-                        ? 'text-[#ffbb00]' 
-                        : 'text-primary'
-                    }`}
+                    className="mt-1.5 text-primary"
                   >
                     <circle cx="12" cy="12" r="12" />
                   </svg>
-                  <span>{issue.text}</span>
+                  <span>No specific issues detected in this analysis</span>
                 </li>
-              ))}
+              )}
             </ul>
           </div>
           
