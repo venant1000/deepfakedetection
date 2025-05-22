@@ -16,14 +16,14 @@ class LightweightDeepfakeDetector(nn.Module):
                  num_layers=1, num_classes=2, dropout=0.3):
         super(LightweightDeepfakeDetector, self).__init__()
         
-        # Load pretrained CNN backbone for per-frame feature extraction
+        # Load CNN backbone for per-frame feature extraction (without downloading pretrained weights)
         if cnn_backbone == 'mobilenet_v2':
-            cnn = models.mobilenet_v2(pretrained=True)
+            cnn = models.mobilenet_v2(pretrained=False)  # Don't download weights, we'll load your trained ones
             # Use only the feature extractor part
             self.cnn = cnn.features
             cnn_out_features = 1280  # MobileNetV2's final feature size
         elif cnn_backbone == 'resnet18':
-            cnn = models.resnet18(pretrained=True)
+            cnn = models.resnet18(pretrained=False)
             # Remove the final classification layer
             modules = list(cnn.children())[:-1]
             self.cnn = nn.Sequential(*modules)
@@ -155,31 +155,30 @@ def analyze_video(video_path):
         avg_confidence = deepfake_confidence
         max_confidence = deepfake_confidence
         
-        # Create timeline markers
+        # Create timeline markers based on overall analysis
         timeline = []
-        for result in frame_results:
-            if result["confidence"] > 0.7:
-                timeline.append({
-                    "position": (result["timestamp"] / (frame_count / fps)) * 100,
-                    "tooltip": f"High deepfake probability: {result['confidence']:.1%}",
-                    "type": "danger"
-                })
-            elif result["confidence"] > 0.4:
-                timeline.append({
-                    "position": (result["timestamp"] / (frame_count / fps)) * 100,
-                    "tooltip": f"Moderate probability: {result['confidence']:.1%}",
-                    "type": "warning"
-                })
+        if deepfake_confidence > 0.7:
+            timeline.append({
+                "position": 50,  # Middle of video
+                "tooltip": f"High deepfake probability: {deepfake_confidence:.1%}",
+                "type": "danger"
+            })
+        elif deepfake_confidence > 0.4:
+            timeline.append({
+                "position": 50,  # Middle of video
+                "tooltip": f"Moderate probability: {deepfake_confidence:.1%}",
+                "type": "warning"
+            })
         
-        # Generate findings
+        # Generate findings based on your model's results
         findings = []
         if max_confidence > 0.8:
             findings.append({
                 "title": "High Confidence Deepfake Detection",
                 "icon": "AlertTriangle",
                 "severity": "high",
-                "timespan": f"Peak at {frame_results[np.argmax(deepfake_scores)]['timestamp']:.1f}s",
-                "description": f"Model detected deepfake with {max_confidence:.1%} confidence"
+                "timespan": "Overall video analysis",
+                "description": f"Your trained model detected deepfake with {max_confidence:.1%} confidence"
             })
         
         # Generate issues
@@ -193,9 +192,9 @@ def analyze_video(video_path):
         return {
             "isDeepfake": is_deepfake_overall,
             "confidence": avg_confidence,
-            "processingTime": len(frames) * 0.2,
+            "processingTime": len(frame_sequence) * 0.2,
             "maxConfidence": max_confidence,
-            "framesAnalyzed": len(frames),
+            "framesAnalyzed": len(frame_sequence),
             "issues": issues,
             "findings": findings,
             "timeline": timeline,
