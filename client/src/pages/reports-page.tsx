@@ -154,7 +154,6 @@ export default function ReportsPage() {
           <TabsList className="mb-6 w-full md:w-auto">
             <TabsTrigger value="all">All Reports</TabsTrigger>
             <TabsTrigger value="saved">Saved Reports</TabsTrigger>
-            <TabsTrigger value="templates">Report Templates</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all">
@@ -324,91 +323,6 @@ export default function ReportsPage() {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="templates">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="hover:border-primary transition-colors cursor-pointer">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Analysis Summary</CardTitle>
-                  <CardDescription>
-                    Generate a comprehensive summary of your video analysis results
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline">Standard Template</Badge>
-                    <Button variant="outline" size="sm">
-                      Use Template
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="hover:border-primary transition-colors cursor-pointer">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Monthly Statistics</CardTitle>
-                  <CardDescription>
-                    Aggregate statistical data about your deepfake detection activities
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline">Standard Template</Badge>
-                    <Button variant="outline" size="sm">
-                      Use Template
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="hover:border-primary transition-colors cursor-pointer">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Trends Report</CardTitle>
-                  <CardDescription>
-                    Analyze trends in deepfake technology and detection methods
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline">Premium Template</Badge>
-                    <Button variant="outline" size="sm">
-                      Use Template
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="hover:border-primary transition-colors cursor-pointer">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Educational Brief</CardTitle>
-                  <CardDescription>
-                    Create an educational brief about deepfake detection techniques
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline">Standard Template</Badge>
-                    <Button variant="outline" size="sm">
-                      Use Template
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="hover:border-primary transition-colors cursor-pointer border-dashed border-2 flex flex-col items-center justify-center p-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-muted-foreground">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" x2="12" y1="8" y2="16"/>
-                  <line x1="8" x2="16" y1="12" y2="12"/>
-                </svg>
-                <h3 className="text-lg font-medium mb-1">Create Custom Template</h3>
-                <p className="text-sm text-muted-foreground text-center mb-4">
-                  Design your own report template with custom fields and sections
-                </p>
-                <Button variant="outline">Create Template</Button>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
       </div>
