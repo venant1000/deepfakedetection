@@ -302,6 +302,37 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
             <span>2:00</span>
             <span>{totalDuration}</span>
           </div>
+          
+          {/* Timeline explanations */}
+          <div className="mt-6 space-y-4">
+            <h4 className="font-medium text-sm">Detection Markers Explained:</h4>
+            <ul className="space-y-3">
+              {analysis.timeline.map((marker, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className={`mt-1 h-3 w-3 rounded-full ${
+                    marker.type === 'danger' ? 'bg-[#ff3366]' : 
+                    marker.type === 'warning' ? 'bg-[#ffbb00]' : 
+                    'bg-primary'
+                  } flex-shrink-0`}></div>
+                  <div>
+                    <div className="font-medium text-sm">
+                      {marker.tooltip} 
+                      <span className="text-muted-foreground text-xs ml-2">
+                        at {Math.floor((marker.position/100) * totalSeconds / 60)}:{String(Math.floor((marker.position/100) * totalSeconds % 60)).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {marker.type === 'danger' 
+                        ? 'Critical manipulation detected with high confidence.' 
+                        : marker.type === 'warning' 
+                        ? 'Potential inconsistency that suggests manipulation.' 
+                        : 'Normal variation within expected parameters.'}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
