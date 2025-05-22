@@ -173,14 +173,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Extract analysis results from PyTorch model
       const isDeepfake = analysisData.isDeepfake;
-      const confidence = Math.round(analysisData.confidence * 100);
+      const confidence = analysisData.confidence; // Keep the raw confidence value (0-1 range)
       const processingTime = analysisData.processingTime || 1;
       const findings = analysisData.findings || [];
       const timeline = analysisData.timeline || [];
       const issues = analysisData.issues || [];
       
       // Construct the full analysis result
-      const analysisResult = {
+      const analysisResult: VideoAnalysisResult = {
         id: videoId,
         fileName: req.file.originalname,
         userId: req.user.id,
@@ -196,7 +196,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
+      // Save the analysis to storage
       await storage.saveVideoAnalysis(videoId, req.user.id, analysisResult);
+      
+      // Log the analysis for monitoring
+      await storage.addSystemLog({
+        type: "info",
+        source: "video-analysis",
+        message: `New video analyzed: ${req.file.originalname}`,
+        details: `Result: ${isDeepfake ? 'Deepfake' : 'Authentic'}, Confidence: ${(confidence * 100).toFixed(1)}%`
+      });
 
       res.status(200).json({
         success: true,
