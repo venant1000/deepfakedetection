@@ -8,6 +8,7 @@ import { VideoAnalysisResult } from "../shared/schema";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
+import { processDeepfakeQuery, getDeepfakeTips } from "./gemini-chatbot";
 
 // We'll use any for our types here to bypass TypeScript errors
 // In a production app, we would define proper types
