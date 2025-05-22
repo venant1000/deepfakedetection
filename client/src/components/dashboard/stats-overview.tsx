@@ -79,13 +79,13 @@ export default function StatsOverview() {
     let storageRemaining;
     if (totalStorage < 1024) {
       storageValue = `${totalStorage} KB`;
-      storageRemaining = "10 GB remaining";
+      storageRemaining = "25 GB remaining";
     } else if (totalStorage < 1024 * 1024) {
       storageValue = `${(totalStorage / 1024).toFixed(1)} MB`;
-      storageRemaining = "9.9 GB remaining";
+      storageRemaining = "24.9 GB remaining";
     } else {
       storageValue = `${(totalStorage / (1024 * 1024)).toFixed(1)} GB`;
-      const remaining = 10 - (totalStorage / (1024 * 1024));
+      const remaining = 25 - (totalStorage / (1024 * 1024));
       storageRemaining = `${remaining.toFixed(1)} GB remaining`;
     }
     
