@@ -8,7 +8,7 @@ import { VideoAnalysisResult } from "../shared/schema";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
-import { processDeepfakeQuery, getDeepfakeTips } from "./gemini-service";
+import { processDeepfakeQuery, getDeepfakeTips, analyzeTimelineMarker } from "./gemini-service";
 
 // We'll use any for our types here to bypass TypeScript errors
 // In a production app, we would define proper types
@@ -563,6 +563,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error getting deepfake tips:", error);
       res.status(500).json({ 
         error: "Failed to get deepfake tips",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Analyze timeline marker with detailed explanation
+  app.post("/api/analyze-timeline-marker", async (req, res) => {
+    try {
+      const { markerType, markerTooltip, timestamp } = req.body;
+      
+      if (!markerType || !markerTooltip || !timestamp) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          message: "markerType, markerTooltip, and timestamp are required" 
+        });
+      }
+      
+      // Validate marker type
+      if (!['normal', 'warning', 'danger'].includes(markerType)) {
+        return res.status(400).json({ 
+          error: "Invalid marker type",
+          message: "markerType must be 'normal', 'warning', or 'danger'" 
+        });
+      }
+      
+      const analysis = await analyzeTimelineMarker(
+        markerType as 'normal' | 'warning' | 'danger',
+        markerTooltip,
+        timestamp
+      );
+      
+      res.json({ analysis });
+    } catch (error) {
+      console.error("Error analyzing timeline marker:", error);
+      res.status(500).json({ 
+        error: "Failed to analyze timeline marker",
         message: error instanceof Error ? error.message : "Unknown error"
       });
     }

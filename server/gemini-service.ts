@@ -103,3 +103,66 @@ export async function getDeepfakeTips(): Promise<string[]> {
     ];
   }
 }
+
+/**
+ * Analyze a timeline marker with detailed explanation based on its severity
+ * @param markerType Type of anomaly: 'normal', 'warning', or 'danger'
+ * @param markerTooltip Brief description of the anomaly
+ * @param timestamp When in the video the anomaly occurs
+ * @returns Detailed AI analysis of the anomaly
+ */
+export async function analyzeTimelineMarker(
+  markerType: 'normal' | 'warning' | 'danger', 
+  markerTooltip: string,
+  timestamp: string
+): Promise<string> {
+  try {
+    // Get API key from environment
+    const apiKey = process.env.GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not configured in environment");
+    }
+    
+    // Initialize Gemini API
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    
+    // Classify the severity level for better context
+    const severityLevel = 
+      markerType === 'danger' ? 'high' :
+      markerType === 'warning' ? 'medium' : 'low';
+    
+    // Create a specialized prompt for the timeline marker analysis
+    const prompt = `
+    As a deepfake detection expert, analyze the following anomaly detected in a video at timestamp ${timestamp}:
+    
+    Anomaly: "${markerTooltip}"
+    Severity: ${severityLevel} (${markerType})
+    
+    Provide a 2-3 sentence detailed explanation of:
+    1. What this specific anomaly likely indicates
+    2. How this type of manipulation is typically created
+    3. Why this is classified as ${severityLevel} risk
+    
+    Keep your response concise, technical but understandable, and focus on educating about this specific type of deepfake anomaly.
+    `;
+    
+    // Generate the analysis
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    return response.text().trim();
+    
+  } catch (error) {
+    console.error("Error analyzing timeline marker with Gemini:", error);
+    
+    // Fallback responses based on severity
+    if (markerType === 'danger') {
+      return `This is a high-risk anomaly showing ${markerTooltip.toLowerCase()}. This type of manipulation typically involves advanced AI techniques that alter facial features or expressions using specialized deepfake algorithms. The high risk classification indicates this anomaly is highly unlikely to occur naturally and strongly suggests intentional manipulation.`;
+    } else if (markerType === 'warning') {
+      return `This medium-risk anomaly shows ${markerTooltip.toLowerCase()}. These inconsistencies often result from imperfect frame transitions or expression blending in the deepfake generation process. While concerning, there's a small possibility this could have natural causes in some lighting or camera conditions.`;
+    } else {
+      return `This low-risk anomaly indicating ${markerTooltip.toLowerCase()} falls within the range of normal video artifacts. While it triggered our detection system, these patterns can often appear in compressed videos or challenging lighting conditions. We've flagged it for transparency but it likely does not indicate manipulation.`;
+    }
+  }
+}
