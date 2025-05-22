@@ -80,33 +80,56 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
         {/* Original Video */}
         <div>
           <h3 className="text-lg font-medium mb-3">Original Video</h3>
-          <div className="aspect-video rounded-lg bg-black flex items-center justify-center relative">
-            {/* Video placeholder */}
-            <div className="text-muted-foreground">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="48" 
-                height="48" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="mb-2 mx-auto"
-              >
-                <path d="m22 8-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <path d="M14 2v6h6"/>
-                <path d="M10 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
-                <path d="m22 16-5.23-5.23a1 1 0 0 0-1.41 0L12 14.12l-1.36-1.36a1 1 0 0 0-1.41 0L2 20"/>
-              </svg>
-              <span>Video Player</span>
-            </div>
+          <div className="aspect-video rounded-lg bg-black flex items-center justify-center relative overflow-hidden">
+            {/* Actual video player */}
+            <video 
+              className="w-full h-full object-contain"
+              src="/sample-video.mp4" // Fallback to a demo video for now
+              ref={(video) => {
+                if (video) {
+                  video.addEventListener('loadedmetadata', () => {
+                    setTotalSeconds(Math.floor(video.duration));
+                    setTotalDuration(`${Math.floor(video.duration / 60)}:${String(Math.floor(video.duration % 60)).padStart(2, '0')}`);
+                  });
+                  
+                  video.addEventListener('timeupdate', () => {
+                    const percent = (video.currentTime / video.duration) * 100;
+                    setProgressPosition(percent);
+                    
+                    const minutes = Math.floor(video.currentTime / 60);
+                    const seconds = Math.floor(video.currentTime % 60);
+                    setCurrentTime(`${minutes}:${String(seconds).padStart(2, '0')}`);
+                  });
+                  
+                  // Update playing state when video ends
+                  video.addEventListener('ended', () => {
+                    setIsPlaying(false);
+                  });
+                }
+              }}
+              onClick={handlePlayPause}
+            />
             
             {/* Playback controls */}
             <div className="absolute bottom-0 left-0 right-0 p-4 glass-dark">
               <div className="flex items-center gap-3">
-                <button className="text-white" onClick={handlePlayPause}>
+                <button className="text-white" onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlayPause();
+                  
+                  // Play/pause the actual video
+                  const parentDiv = e.currentTarget.parentElement;
+                  const videoContainer = parentDiv ? parentDiv.parentElement : null;
+                  const videoElement = videoContainer ? videoContainer.querySelector('video') : null;
+                  
+                  if (videoElement) {
+                    if (isPlaying) {
+                      videoElement.pause();
+                    } else {
+                      videoElement.play().catch(e => console.error('Error playing video:', e));
+                    }
+                  }
+                }}>
                   {isPlaying ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                   ) : (
@@ -117,7 +140,22 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
                 <div 
                   className="h-1 bg-muted flex-grow rounded-full relative cursor-pointer" 
                   ref={timelineRef}
-                  onClick={handleTimelineClick}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTimelineClick(e);
+                    
+                    // Get video element using a more reliable approach
+                    const parentDiv = e.currentTarget.parentElement;
+                    const videoContainer = parentDiv ? parentDiv.parentElement : null;
+                    const videoElement = videoContainer ? videoContainer.querySelector('video') : null;
+                    
+                    if (videoElement && timelineRef.current) {
+                      const rect = timelineRef.current.getBoundingClientRect();
+                      const clickPosition = e.clientX - rect.left;
+                      const newPosition = (clickPosition / rect.width);
+                      videoElement.currentTime = newPosition * videoElement.duration;
+                    }
+                  }}
                 >
                   <div 
                     className="h-1 bg-primary rounded-full absolute top-0 left-0" 

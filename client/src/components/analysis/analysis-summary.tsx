@@ -21,7 +21,6 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
   const getMetrics = () => {
     const metrics = [
       { name: "Facial Inconsistency", value: 0 },
-      { name: "Audio Manipulation", value: 0 },
       { name: "Visual Artifacts", value: 0 }
     ];
     
@@ -33,23 +32,33 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
                              finding.severity === "medium" ? 70 + Math.floor(Math.random() * 15) : 
                              50 + Math.floor(Math.random() * 20);
         } 
-        else if (finding.title.includes("Audio") || finding.description.includes("audio") || finding.description.includes("lip")) {
+        else if (finding.description.includes("lighting") || finding.description.includes("shadow") || 
+                finding.title.includes("Lighting") || finding.title.includes("Inconsistenc")) {
           metrics[1].value = finding.severity === "high" ? 85 + Math.floor(Math.random() * 10) : 
                              finding.severity === "medium" ? 70 + Math.floor(Math.random() * 15) : 
                              50 + Math.floor(Math.random() * 20);
         }
-        else if (finding.description.includes("lighting") || finding.description.includes("shadow") || finding.title.includes("Lighting")) {
-          metrics[2].value = finding.severity === "high" ? 85 + Math.floor(Math.random() * 10) : 
-                             finding.severity === "medium" ? 70 + Math.floor(Math.random() * 15) : 
-                             50 + Math.floor(Math.random() * 20);
-        }
       });
-    } else {
-      // If no findings, base metrics on overall confidence
+    } 
+    
+    // Ensure we have values for both metrics
+    if (metrics[0].value === 0 || metrics[1].value === 0) {
+      // Generate random values based on the overall confidence
       const baseValue = analysis.isDeepfake ? analysis.confidence : 100 - analysis.confidence;
-      metrics[0].value = Math.min(99, baseValue + Math.floor(Math.random() * 10) - 5);
-      metrics[1].value = Math.min(99, baseValue + Math.floor(Math.random() * 10) - 5);
-      metrics[2].value = Math.min(99, baseValue + Math.floor(Math.random() * 10) - 5);
+      
+      // Random value close to confidence but with some variation
+      const getRandomValue = () => {
+        return Math.min(99, baseValue + Math.floor(Math.random() * 15) - 7);
+      };
+      
+      // Set any missing values
+      if (metrics[0].value === 0) {
+        metrics[0].value = getRandomValue();
+      }
+      
+      if (metrics[1].value === 0) {
+        metrics[1].value = getRandomValue();
+      }
     }
     
     return metrics;
