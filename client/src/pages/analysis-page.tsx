@@ -27,12 +27,15 @@ export default function AnalysisPage() {
       const formattedAnalysis = {
         id: videoAnalysis.id,
         fileName: videoAnalysis.fileName,
-        duration: "2:30", // We'll use a fixed duration until we have actual video metadata
+        // We'll still include a duration property, but the video element will determine the real duration
+        duration: "2:30", 
         date: new Date(videoAnalysis.uploadDate).toLocaleDateString("en-US", {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         }),
+        // This is important for building a URL to the uploaded file
+        videoUrl: `/uploads/${videoAnalysis.id}`,
         isDeepfake: videoAnalysis.analysis.isDeepfake,
         confidence: videoAnalysis.analysis.confidence,
         

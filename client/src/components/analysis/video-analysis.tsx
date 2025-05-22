@@ -9,6 +9,7 @@ interface TimelineMarker {
 interface VideoAnalysisProps {
   analysis: {
     timeline: TimelineMarker[];
+    videoUrl?: string;
   };
 }
 
@@ -84,7 +85,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
             {/* Actual video player */}
             <video 
               className="w-full h-full object-contain"
-              src="/sample-video.mp4" // Fallback to a demo video for now
+              poster="/public/placeholder.svg"
               ref={(video) => {
                 if (video) {
                   video.addEventListener('loadedmetadata', () => {

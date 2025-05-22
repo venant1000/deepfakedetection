@@ -32,6 +32,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
+  // Serve uploaded videos
+  app.get("/uploads/:videoId", async (req, res) => {
+    try {
+      // In a real implementation, we would retrieve the actual video file for this ID
+      // For now, we're using a placeholder SVG converted to a short video
+      // This is just for demonstration - in production we would stream the actual uploaded video
+      res.sendFile(process.cwd() + "/public/placeholder.svg");
+    } catch (error) {
+      console.error("Error serving video file:", error);
+      res.status(404).send("Video not found");
+    }
+  });
+
   // Videos API
   app.post("/api/videos/upload", upload.single("video"), async (req: any, res) => {
     try {
@@ -44,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // In a real implementation, we would:
-      // 1. Save the video file
+      // 1. Save the video file to a permanent location
       // 2. Process it with Gemini API for deepfake detection
       // 3. Store the analysis results
 
