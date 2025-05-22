@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import multer from "multer";
+import { VideoAnalysisResult } from "../shared/schema";
 
 // We'll use any for our types here to bypass TypeScript errors
 // In a production app, we would define proper types
@@ -264,7 +265,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Count different types of deepfakes based on findings
       allVideos.forEach(video => {
         if (video.analysis.isDeepfake && video.analysis.findings) {
-          video.analysis.findings.forEach(finding => {
+          video.analysis.findings.forEach((finding: { 
+            title: string; 
+            icon: string; 
+            severity: string; 
+            timespan: string; 
+            description: string; 
+          }) => {
             if (finding.title.includes("Facial")) {
               deepfakeTypes.set("Facial Manipulation", deepfakeTypes.get("Facial Manipulation") + 1);
             } else if (finding.title.includes("Audio")) {
