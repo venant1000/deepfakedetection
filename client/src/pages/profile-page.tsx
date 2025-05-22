@@ -103,8 +103,6 @@ export default function ProfilePage() {
           <TabsList className="mb-6 w-full md:w-auto">
             <TabsTrigger value="profile">Profile Information</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="api">API Access</TabsTrigger>
           </TabsList>
           
           {/* Profile Information Tab */}
@@ -317,44 +315,7 @@ export default function ProfilePage() {
                   </CardFooter>
                 </Card>
                 
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Login History</CardTitle>
-                    <CardDescription>
-                      Recent logins to your account
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        { date: "May 21, 2025", time: "11:42 AM", device: "Chrome on Windows", location: "San Francisco, CA" },
-                        { date: "May 20, 2025", time: "9:15 PM", device: "Safari on iPhone", location: "San Francisco, CA" },
-                        { date: "May 18, 2025", time: "3:30 PM", device: "Chrome on MacOS", location: "San Francisco, CA" }
-                      ].map((login, index) => (
-                        <div key={index} className="flex items-start gap-4 py-3 border-b border-muted last:border-0">
-                          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                              <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="text-sm font-medium">{login.device}</p>
-                                <p className="text-xs text-muted-foreground">{login.location}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm">{login.date}</p>
-                                <p className="text-xs text-muted-foreground">{login.time}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+
               </div>
               
               <div>
@@ -415,115 +376,7 @@ export default function ProfilePage() {
             </div>
           </TabsContent>
           
-          {/* Notifications Tab */}
-          <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>
-                  Choose how and when you want to be notified
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="emailNotifications">Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications via email
-                    </p>
-                  </div>
-                  <Switch 
-                    id="emailNotifications" 
-                    checked={notificationPrefs.emailNotifications}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, emailNotifications: checked }))
-                    }
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <h3 className="text-md font-medium">Alerts</h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="analysisCompletionAlerts">Analysis Completion</Label>
-                      <p className="text-sm text-muted-foreground">
-                        When your video analysis is complete
-                      </p>
-                    </div>
-                    <Switch 
-                      id="analysisCompletionAlerts" 
-                      checked={notificationPrefs.analysisCompletionAlerts}
-                      onCheckedChange={(checked) => 
-                        setNotificationPrefs(prev => ({ ...prev, analysisCompletionAlerts: checked }))
-                      }
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="securityAlerts">Security Alerts</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Important security-related notifications
-                      </p>
-                    </div>
-                    <Switch 
-                      id="securityAlerts" 
-                      checked={notificationPrefs.securityAlerts}
-                      onCheckedChange={(checked) => 
-                        setNotificationPrefs(prev => ({ ...prev, securityAlerts: checked }))
-                      }
-                    />
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <h3 className="text-md font-medium">Updates & Marketing</h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="weeklyReportSummary">Weekly Report Summary</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Weekly summary of your detection activities
-                      </p>
-                    </div>
-                    <Switch 
-                      id="weeklyReportSummary" 
-                      checked={notificationPrefs.weeklyReportSummary}
-                      onCheckedChange={(checked) => 
-                        setNotificationPrefs(prev => ({ ...prev, weeklyReportSummary: checked }))
-                      }
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="marketingEmails">Marketing Emails</Label>
-                      <p className="text-sm text-muted-foreground">
-                        News, updates, and promotional content
-                      </p>
-                    </div>
-                    <Switch 
-                      id="marketingEmails" 
-                      checked={notificationPrefs.marketingEmails}
-                      onCheckedChange={(checked) => 
-                        setNotificationPrefs(prev => ({ ...prev, marketingEmails: checked }))
-                      }
-                    />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-end border-t pt-6">
-                <Button onClick={handleSaveProfile} disabled={isLoading}>
-                  {isLoading ? 'Saving...' : 'Save Preferences'}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
+
           
           {/* API Access Tab */}
           <TabsContent value="api">
