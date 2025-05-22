@@ -36,8 +36,8 @@ export async function processDeepfakeQuery(userMessage: string): Promise<string>
     
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use the gemini-1.0-pro model which is the latest stable model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+    // Use the gemini-pro model with v1 API version
+    const model = genAI.getGenerativeModel({ model: "gemini-pro", apiVersion: "v1" });
     
     // Create a context-aware prompt that includes our guidelines
     const prompt = `
