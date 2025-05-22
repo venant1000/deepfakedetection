@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -9,6 +10,12 @@ interface SidebarProps {
 export default function Sidebar({ isAdmin = false }: SidebarProps) {
   const [location, navigate] = useLocation();
   const { logoutMutation } = useAuth();
+  const { theme, setTheme } = useTheme();
+  
+  // Toggle theme function
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   const dashboardLinks = [
     {
@@ -122,6 +129,34 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
         </div>
         <span className="text-xl font-bold hidden md:block">DeepGuard<span className="text-primary">AI</span></span>
+        
+        {/* Theme toggle button */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleTheme();
+          }}
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted transition-colors"
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/>
+              <path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/>
+              <path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/>
+              <path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/>
+              <path d="m19.07 4.93-1.41 1.41"/>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          )}
+        </button>
       </div>
       
       <div className="mt-8">

@@ -635,14 +635,32 @@ export default function HistoryPage() {
                 ))
               ) : (
                 <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground mb-4">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.3-4.3"/>
-                  </svg>
-                  <h3 className="text-xl font-medium mb-2">No results found</h3>
-                  <p className="text-muted-foreground text-center max-w-md">
-                    We couldn't find any analysis history that matches your filters. Try changing your search criteria.
-                  </p>
+                  {error ? (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 mb-4">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12" y2="16"/>
+                      </svg>
+                      <h3 className="text-xl font-medium mb-2">Error loading analyses</h3>
+                      <p className="text-muted-foreground text-center max-w-md">
+                        There was a problem retrieving your analysis history. Please try again later.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground mb-4">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.3-4.3"/>
+                      </svg>
+                      <h3 className="text-xl font-medium mb-2">No results found</h3>
+                      <p className="text-muted-foreground text-center max-w-md">
+                        {searchTerm || resultFilter !== "all" || timeFilter !== "all" ?
+                          "We couldn't find any analysis history that matches your filters. Try changing your search criteria." :
+                          "You haven't analyzed any videos yet. Use the upload page to analyze your first video."}
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
