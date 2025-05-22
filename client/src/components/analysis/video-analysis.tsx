@@ -22,7 +22,8 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
 
   // Set initial duration when the component loads
   useEffect(() => {
-    // If we had actual video duration, we would use it here
+    // If we had actual video duration, we would parse it from analysis data
+    // For now we'll use the default until real duration metadata is available
     setTotalDuration("2:30"); // Default duration
     setTotalSeconds(150); // 2:30 in seconds
   }, []);
@@ -154,43 +155,74 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
               </svg>
             </div>
             
-            {/* AI analysis overlay elements */}
-            <div className="absolute top-4 left-4 glass p-2 rounded-md text-xs font-mono">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[#ff3366] animate-pulse"></div>
-                <span>LIP-SYNC ERROR DETECTED</span>
+            {/* Display issues from analysis data */}
+            {analysis.timeline && analysis.timeline.length > 0 ? (
+              <>
+                {/* Show first issue at top */}
+                {analysis.timeline[0] && (
+                  <div className="absolute top-4 left-4 glass p-2 rounded-md text-xs font-mono">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-2 w-2 rounded-full ${
+                        analysis.timeline[0].type === 'danger' ? 'bg-[#ff3366]' : 
+                        analysis.timeline[0].type === 'warning' ? 'bg-[#ffbb00]' : 
+                        'bg-primary'
+                      } animate-pulse`}></div>
+                      <span>{analysis.timeline[0].tooltip.toUpperCase()}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show second issue at bottom */}
+                {analysis.timeline[1] && (
+                  <div className="absolute bottom-16 right-4 glass p-2 rounded-md text-xs font-mono">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-2 w-2 rounded-full ${
+                        analysis.timeline[1].type === 'danger' ? 'bg-[#ff3366]' : 
+                        analysis.timeline[1].type === 'warning' ? 'bg-[#ffbb00]' : 
+                        'bg-primary'
+                      } animate-pulse`}></div>
+                      <span>{analysis.timeline[1].tooltip.toUpperCase()}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Central analysis summary - generated from the timeline */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass p-4 rounded-lg text-center">
+                  <div className="text-lg font-semibold mb-2">Frame Analysis</div>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    {analysis.timeline.filter(m => m.type === 'danger').length > 0 ? 
+                      "Multiple critical issues detected" : 
+                      analysis.timeline.filter(m => m.type === 'warning').length > 0 ?
+                      "Suspicious elements identified" : 
+                      "No significant issues detected"}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {analysis.timeline.slice(0, 4).map((marker, idx) => (
+                      <div key={idx} className="glass-dark p-2 rounded">
+                        <div className={`font-semibold ${
+                          marker.type === 'danger' ? 'text-[#ff3366]' : 
+                          marker.type === 'warning' ? 'text-[#ffbb00]' : 
+                          'text-primary'
+                        } mb-1`}>
+                          {marker.tooltip.split(' ')[0]}
+                        </div>
+                        <div>
+                          {marker.type === 'danger' ? '85-95% anomaly' : 
+                           marker.type === 'warning' ? '65-85% anomaly' : 
+                           '20-40% anomaly'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                <div className="text-lg font-semibold">No Anomalies Detected</div>
+                <div className="text-sm text-muted-foreground mt-2">Video appears authentic</div>
               </div>
-            </div>
-            
-            <div className="absolute bottom-16 right-4 glass p-2 rounded-md text-xs font-mono">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[#ffbb00] animate-pulse"></div>
-                <span>UNNATURAL EYE MOVEMENT</span>
-              </div>
-            </div>
-            
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glass p-4 rounded-lg text-center">
-              <div className="text-lg font-semibold mb-2">Frame Analysis</div>
-              <div className="text-sm text-muted-foreground mb-4">Multiple facial inconsistencies detected</div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="glass-dark p-2 rounded">
-                  <div className="font-semibold text-[#ff3366] mb-1">Lip Movement</div>
-                  <div>94% anomaly</div>
-                </div>
-                <div className="glass-dark p-2 rounded">
-                  <div className="font-semibold text-[#ffbb00] mb-1">Eye Blinking</div>
-                  <div>78% anomaly</div>
-                </div>
-                <div className="glass-dark p-2 rounded">
-                  <div className="font-semibold text-[#ffbb00] mb-1">Facial Texture</div>
-                  <div>71% anomaly</div>
-                </div>
-                <div className="glass-dark p-2 rounded">
-                  <div className="font-semibold text-primary mb-1">Head Position</div>
-                  <div>22% anomaly</div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

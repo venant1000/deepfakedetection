@@ -23,11 +23,11 @@ export default function AnalysisPage() {
   
   useEffect(() => {
     if (videoAnalysis) {
-      // Create a properly formatted analysis object from the real data
+      // Create a properly formatted analysis object directly from the API data
       const formattedAnalysis = {
         id: videoAnalysis.id,
         fileName: videoAnalysis.fileName,
-        duration: "2:30", // This would come from actual video metadata
+        duration: "2:30", // We'll use a fixed duration until we have actual video metadata
         date: new Date(videoAnalysis.uploadDate).toLocaleDateString("en-US", {
           year: 'numeric',
           month: 'long',
@@ -35,28 +35,44 @@ export default function AnalysisPage() {
         }),
         isDeepfake: videoAnalysis.analysis.isDeepfake,
         confidence: videoAnalysis.analysis.confidence,
-        issues: videoAnalysis.analysis.issues || [
-          {
-            type: videoAnalysis.analysis.isDeepfake ? "error" : "info",
-            text: videoAnalysis.analysis.isDeepfake 
-              ? "Potential deepfake indicators detected" 
-              : "No significant manipulation detected"
-          }
-        ],
-        findings: videoAnalysis.analysis.findings || [
-          {
-            title: videoAnalysis.analysis.isDeepfake ? "AI-Generated Content Detected" : "Authentic Content",
-            icon: videoAnalysis.analysis.isDeepfake ? "alert-triangle" : "check-circle",
-            severity: videoAnalysis.analysis.isDeepfake ? "High" : "Low",
-            timespan: "throughout video",
-            description: videoAnalysis.analysis.isDeepfake 
-              ? `This video shows signs of manipulation with ${videoAnalysis.analysis.confidence}% confidence.` 
-              : `This video appears to be authentic with ${videoAnalysis.analysis.confidence}% confidence.`
-          }
-        ],
-        timeline: videoAnalysis.analysis.timeline || [
-          { position: 50, tooltip: videoAnalysis.analysis.isDeepfake ? "Potential manipulation detected" : "No issues detected", type: "normal" as "normal" | "warning" | "danger" }
-        ]
+        
+        // Use the actual issues from the API response if available
+        issues: videoAnalysis.analysis.issues && videoAnalysis.analysis.issues.length > 0 
+          ? videoAnalysis.analysis.issues 
+          : [
+              {
+                type: videoAnalysis.analysis.isDeepfake ? "error" : "info",
+                text: videoAnalysis.analysis.isDeepfake 
+                  ? "Potential deepfake indicators detected" 
+                  : "No significant manipulation detected"
+              }
+            ],
+        
+        // Use the actual findings from the API response if available
+        findings: videoAnalysis.analysis.findings && videoAnalysis.analysis.findings.length > 0
+          ? videoAnalysis.analysis.findings
+          : [
+              {
+                title: videoAnalysis.analysis.isDeepfake ? "AI-Generated Content Detected" : "Authentic Content",
+                icon: videoAnalysis.analysis.isDeepfake ? "alert-triangle" : "check-circle",
+                severity: videoAnalysis.analysis.isDeepfake ? "high" : "low",
+                timespan: "throughout video",
+                description: videoAnalysis.analysis.isDeepfake 
+                  ? `This video shows signs of manipulation with ${videoAnalysis.analysis.confidence}% confidence.` 
+                  : `This video appears to be authentic with ${videoAnalysis.analysis.confidence}% confidence.`
+              }
+            ],
+        
+        // Use the actual timeline markers from the API response if available
+        timeline: videoAnalysis.analysis.timeline && videoAnalysis.analysis.timeline.length > 0
+          ? videoAnalysis.analysis.timeline
+          : [
+              { 
+                position: 50, 
+                tooltip: videoAnalysis.analysis.isDeepfake ? "Potential manipulation detected" : "No issues detected", 
+                type: (videoAnalysis.analysis.isDeepfake ? "warning" : "normal") as "normal" | "warning" | "danger" 
+              }
+            ]
       };
       
       setAnalysisData(formattedAnalysis);
