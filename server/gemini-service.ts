@@ -38,20 +38,19 @@ export async function processDeepfakeQuery(userMessage: string): Promise<string>
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
-    // Create a chat session
-    const chat = model.startChat({
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 800,
-      },
-      systemInstruction: SYSTEM_PROMPT,
-    });
+    // Create a context-aware prompt that includes our guidelines
+    const prompt = `
+As an expert in deepfake detection and digital media forensics, please answer the following question about deepfakes:
 
-    // Generate a response from the model
-    const result = await chat.sendMessage(userMessage);
-    const response = result.response;
+${userMessage}
+
+Remember to focus only on educational information about deepfakes, their detection, or their societal impact. If the question is unrelated to deepfakes, politely redirect the conversation to deepfake topics.
+`;
+
+    // Generate content directly instead of using chat
+    const result = await model.generateContent(prompt);
     
-    // Get the text response
+    const response = result.response;
     return response.text();
   } catch (error) {
     console.error("Error processing chat message with Gemini:", error);
@@ -76,7 +75,9 @@ export async function getDeepfakeTips(): Promise<string[]> {
     
     const prompt = "Provide 5 short, practical tips for detecting deepfakes in videos. Make each tip 1-2 sentences only.";
     
+    // Generate content directly
     const result = await model.generateContent(prompt);
+    
     const response = result.response;
     const text = response.text();
     
