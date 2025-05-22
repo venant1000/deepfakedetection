@@ -5,6 +5,9 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import multer from "multer";
 import { VideoAnalysisResult } from "../shared/schema";
+import { spawn } from "child_process";
+import path from "path";
+import fs from "fs";
 
 // We'll use any for our types here to bypass TypeScript errors
 // In a production app, we would define proper types
@@ -35,6 +38,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve static files from public directory
   app.use('/public', express.static('public'));
+
+  // Function to run deepfake analysis using Python model
+  async function runDeepfakeAnalysis(videoPath: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const pythonScript = path.join(__dirname, 'deepfake_detector.py');
+      const pythonProcess = spawn('python3', [pythonScript, videoPath]);
+      
+      let stdout = '';
+      let stderr = '';
+      
+      pythonProcess.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      pythonProcess.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      pythonProcess.on('close', (code) => {
+        if (code === 0) {
+          try {
+            const result = JSON.parse(stdout);
+            resolve(result);
+          } catch (error) {
+            reject(new Error(`Failed to parse analysis result: ${error}`));
+          }
+        } else {
+          reject(new Error(`Python script failed with code ${code}: ${stderr}`));
+        }
+      });
+      
+      pythonProcess.on('error', (error) => {
+        reject(new Error(`Failed to start Python process: ${error.message}`));
+      });
+    });
+  }
   
   // Create a simple video endpoint for demo purposes
   app.get("/uploads/:videoId", async (req, res) => {
@@ -83,67 +122,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No video file provided" });
       }
 
-      // In a real implementation, we would:
-      // 1. Save the video file to a permanent location
-      // 2. Process it with Gemini API for deepfake detection
-      // 3. Store the analysis results
-
-      // Generate a real video ID based on timestamp and user ID
+      // Generate a unique video ID
       const videoId = `${Date.now()}-${req.user.id}-${Math.floor(Math.random() * 1000)}`;
       
-      // In a production app, this would call the Gemini API to analyze the video
-      // For now, we'll create realistic analysis with consistent data based on file properties
+      // Save video file temporarily for analysis
+      const tempVideoPath = path.join(__dirname, '..', 'uploads', `${videoId}.${req.file.originalname.split('.').pop()}`);
       
-      // Use file size as a deterministic factor for analysis results
-      const fileSize = req.file.size;
-      const sizeBasedScore = (fileSize % 100) / 100; // Get a value between 0-0.99
+      // Ensure uploads directory exists
+      const uploadsDir = path.dirname(tempVideoPath);
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
       
-      // Create consistent analysis based on the file
-      const isDeepfake = sizeBasedScore > 0.5;
-      const confidence = isDeepfake ? 
-        Math.floor(85 + (sizeBasedScore * 15)) : // High confidence for deepfakes (85-100%)
-        Math.floor(70 + (sizeBasedScore * 20));  // Varied confidence for authentic (70-90%)
+      // Write the uploaded video to temporary file
+      fs.writeFileSync(tempVideoPath, req.file.buffer);
       
-      // Calculate processing time based on file size (larger files take longer)
-      const processingTime = Math.max(1, Math.min(10, Math.floor(fileSize / (1024 * 1024 * 2))));
-      
-      // Generate findings for deepfakes
-      const findings = isDeepfake ? [
-        {
-          title: "Facial Inconsistencies",
-          icon: "face",
-          severity: "high",
-          timespan: "0:05-0:32",
-          description: "Unnatural facial movements detected in multiple frames."
-        },
-        {
-          title: "Audio-Visual Mismatch",
-          icon: "audio",
-          severity: "medium",
-          timespan: "Entire video",
-          description: "Lip movements don't perfectly match audio content."
-        },
-        {
-          title: "Lighting Inconsistencies",
-          icon: "light",
-          severity: "low",
-          timespan: "0:18-0:25",
-          description: "Shadows and lighting appear artificially rendered."
+      // Run PyTorch deepfake analysis
+      let analysisData;
+      try {
+        analysisData = await runDeepfakeAnalysis(tempVideoPath);
+        
+        // Clean up temporary file after analysis
+        fs.unlinkSync(tempVideoPath);
+        
+        if (analysisData.error) {
+          throw new Error(analysisData.error);
         }
-      ] : [];
+      } catch (error) {
+        // Clean up temporary file on error
+        if (fs.existsSync(tempVideoPath)) {
+          fs.unlinkSync(tempVideoPath);
+        }
+        console.error("Deepfake analysis failed:", error);
+        return res.status(500).json({ 
+          message: "Failed to analyze video", 
+          error: error.message 
+        });
+      }
       
-      // Create timeline markers for visualization
-      const timeline = isDeepfake ? [
-        { position: 15, tooltip: "Facial anomaly detected", type: "warning" },
-        { position: 35, tooltip: "Audio-visual mismatch", type: "warning" },
-        { position: 75, tooltip: "Lighting inconsistency", type: "danger" }
-      ] : [];
-      
-      // Generate random issues for low-confidence results
-      const issues = confidence < 85 ? [
-        { type: "warning", text: "Low video quality makes analysis less certain" },
-        { type: "info", text: "Consider providing higher resolution video for better results" }
-      ] : [];
+      // Extract analysis results from PyTorch model
+      const isDeepfake = analysisData.isDeepfake;
+      const confidence = Math.round(analysisData.confidence * 100);
+      const processingTime = analysisData.processingTime || 1;
+      const findings = analysisData.findings || [];
+      const timeline = analysisData.timeline || [];
+      const issues = analysisData.issues || [];
       
       // Construct the full analysis result
       const analysisResult = {
