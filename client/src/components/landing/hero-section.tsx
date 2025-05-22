@@ -22,13 +22,6 @@ export default function HeroSection() {
               >
                 Get Started
               </Button>
-              <Button 
-                variant="outline" 
-                className="py-6 px-8 rounded-lg border border-secondary text-secondary hover:bg-secondary hover:text-white purple-glow transition-all text-base"
-                onClick={() => navigate("/auth")}
-              >
-                Watch Demo
-              </Button>
             </div>
             <div className="flex items-center gap-6 pt-4">
               <p className="text-sm text-muted-foreground">Powered by:</p>
