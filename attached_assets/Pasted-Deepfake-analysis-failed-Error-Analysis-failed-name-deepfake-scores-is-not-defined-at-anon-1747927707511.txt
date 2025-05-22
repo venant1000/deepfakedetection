@@ -1,0 +1,103 @@
+Deepfake analysis failed: Error: Analysis failed: name 'deepfake_scores' is not defined
+    at <anonymous> (/home/runner/workspace/server/routes.ts:151:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+3:24:45 PM [express] POST /api/videos/upload 500 in 9340ms :: {"message":"Failed to analyze video","…
+3:26:37 PM [express] GET /api/user 401 in 1ms :: {"message":"Not authenticated"}
+3:26:44 PM [express] GET /api/user 401 in 1ms :: {"message":"Not authenticated"}
+Starting deepfake analysis for video: /home/runner/workspace/uploads/1747927650304-1-759.mp4
+Analysis completed. Results: {
+  "isDeepfake": true,
+  "confidence": 0.9881435036659241,
+  "processingTime": 2,
+  "maxConfidence": 0.9881435036659241,
+  "framesAnalyzed": 10,
+  "issues": [
+    {
+      "type": "deepfake",
+      "text": "Video shows AI manipulation signs (confidence: 98.8%)"
+    }
+  ],
+  "findings": [
+    {
+      "title": "High Confidence Deepfake Detection",
+      "icon": "AlertTriangle",
+      "severity": "high",
+      "timespan": "Overall video analysis",
+      "description": "Your trained model detected deepfake with 98.8% confidence"
+    }
+  ],
+  "timeline": [
+    {
+      "position": 50,
+      "tooltip": "High deepfake probability: 98.8%",
+      "type": "danger"
+    }
+  ],
+  "frameResults": [
+    {
+      "frame_index": 0,
+      "timestamp": 0,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 1,
+      "timestamp": 0.875,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 2,
+      "timestamp": 1.75,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 3,
+      "timestamp": 2.625,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 4,
+      "timestamp": 3.5,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 5,
+      "timestamp": 4.375,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 6,
+      "timestamp": 5.25,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 7,
+      "timestamp": 6.125,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 8,
+      "timestamp": 7,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    },
+    {
+      "frame_index": 9,
+      "timestamp": 7.875,
+      "confidence": 0.9881435036659241,
+      "is_deepfake": true
+    }
+  ],
+  "modelUsed": "PyTorch Lightweight Deepfake Detector"
+}
+Video upload error: ReferenceError: fileSize is not defined
+    at <anonymous> (/home/runner/workspace/server/routes.ts:179:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+3:27:35 PM [express] POST /api/videos/upload 500 in 29812ms :: {"message":"Failed to process video u…
