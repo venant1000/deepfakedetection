@@ -114,9 +114,7 @@ export async function getDeepfakeTips(): Promise<string[]> {
 export async function analyzeTimelineMarker(
   markerType: 'normal' | 'warning' | 'danger', 
   markerTooltip: string,
-  timestamp: string,
-  frameIndex?: number,
-  confidence?: number
+  timestamp: string
 ): Promise<string> {
   try {
     // Get API key from environment
@@ -135,25 +133,19 @@ export async function analyzeTimelineMarker(
       markerType === 'danger' ? 'high' :
       markerType === 'warning' ? 'medium' : 'low';
     
-    // Format confidence score if available
-    const confidenceInfo = confidence !== undefined ? 
-      `with a confidence score of ${(confidence * 100).toFixed(1)}%` : '';
-    
     // Create a specialized prompt for the timeline marker analysis
     const prompt = `
-    As a deepfake detection expert, analyze the following frame ${frameIndex !== undefined ? `(Frame #${frameIndex + 1})` : ''} 
-    detected in a video at timestamp ${timestamp} ${confidenceInfo}:
+    As a deepfake detection expert, analyze the following anomaly detected in a video at timestamp ${timestamp}:
     
     Anomaly: "${markerTooltip}"
     Severity: ${severityLevel} (${markerType})
-    ${confidence !== undefined ? `Confidence: ${(confidence * 100).toFixed(1)}%` : ''}
     
     Provide a 2-3 sentence detailed explanation of:
-    1. What this specific anomaly likely indicates about this frame
+    1. What this specific anomaly likely indicates
     2. How this type of manipulation is typically created
-    3. Why this confidence level (${(confidence !== undefined ? (confidence * 100).toFixed(1) : 0)}%) suggests a ${severityLevel} risk
+    3. Why this is classified as ${severityLevel} risk
     
-    Keep your response concise, technical but understandable, and focus on educating about this specific frame's deepfake characteristics.
+    Keep your response concise, technical but understandable, and focus on educating about this specific type of deepfake anomaly.
     `;
     
     // Generate the analysis

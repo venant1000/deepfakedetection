@@ -571,7 +571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analyze timeline marker with detailed explanation
   app.post("/api/analyze-timeline-marker", async (req, res) => {
     try {
-      const { markerType, markerTooltip, timestamp, frameIndex, confidence } = req.body;
+      const { markerType, markerTooltip, timestamp } = req.body;
       
       if (!markerType || !markerTooltip || !timestamp) {
         return res.status(400).json({ 
@@ -591,9 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysis = await analyzeTimelineMarker(
         markerType as 'normal' | 'warning' | 'danger',
         markerTooltip,
-        timestamp,
-        frameIndex,
-        confidence
+        timestamp
       );
       
       res.json({ analysis });
