@@ -7,7 +7,7 @@ const mockUsers = [
     id: 1,
     name: "Alex Morgan",
     email: "alex.morgan@example.com",
-    role: "premium",
+    role: "verified",
     status: "active",
     lastActivity: "10 minutes ago"
   },
@@ -67,7 +67,7 @@ export default function UserManagement() {
         return 'bg-purple-500/20 text-purple-400';
       case 'moderator':
         return 'bg-blue-500/20 text-blue-400';
-      case 'premium':
+      case 'verified':
         return 'bg-primary/20 text-primary';
       default:
         return 'bg-gray-500/20 text-gray-400';

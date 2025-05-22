@@ -270,14 +270,10 @@ export default function ProfilePage() {
                         <span className="text-sm">Email verified</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                        <span className="text-sm">Free tier</span>
+                        <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                        <span className="text-sm">Verified user</span>
                       </div>
                     </div>
-                    <Separator className="my-4" />
-                    <Button variant="outline" className="w-full">
-                      Upgrade Account
-                    </Button>
                   </CardContent>
                 </Card>
               </div>

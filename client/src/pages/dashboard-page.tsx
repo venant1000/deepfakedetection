@@ -30,7 +30,7 @@ export default function DashboardPage() {
               </div>
               <div className="hidden md:block">
                 <p className="font-medium">{user?.username}</p>
-                <p className="text-sm text-muted-foreground">Standard User</p>
+                <p className="text-sm text-muted-foreground">Active User</p>
               </div>
             </div>
           </div>
