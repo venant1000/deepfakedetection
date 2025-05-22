@@ -178,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes - For simplicity in this demo, we'll check if the username contains "admin"
-  app.get("/api/admin/stats", async (req, res) => {
+  async function adminStatsHandler(req: Request, res: any) {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Authentication required" });
@@ -391,8 +391,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
-  });
+  }
 
+  // Register both endpoints to support the transition
+  app.get("/api/admin/stats", adminStatsHandler);
+  app.get("/api/admin/analytics", adminStatsHandler);
+  
   app.get("/api/admin/users", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
