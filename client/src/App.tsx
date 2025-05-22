@@ -34,6 +34,7 @@ function Router() {
       <ProtectedRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/admin/users" component={AdminUsersPage} />
       <ProtectedRoute path="/admin/analytics" component={AdminAnalyticsPage} />
+      <ProtectedRoute path="/admin-analytics" component={AdminAnalyticsPage} />
       <ProtectedRoute path="/admin/logs" component={AdminLogsPage} />
       <ProtectedRoute path="/admin/settings" component={AdminSettingsPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
