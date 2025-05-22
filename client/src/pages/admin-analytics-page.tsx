@@ -416,6 +416,63 @@ export default function AdminAnalyticsPage() {
                   </Card>
                 </div>
                 
+                {/* Classification Breakdown Chart */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                  <Card className="col-span-1 border-0 shadow-md">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Analysis Results Breakdown</CardTitle>
+                          <CardDescription>Distribution of video classifications</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="h-[250px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={analyticsData?.classificationBreakdown || [
+                                { name: "Authentic", value: 0, color: "#00ff88" },
+                                { name: "Deepfake", value: 0, color: "#ff3366" },
+                                { name: "Moderate/Suspicious", value: 0, color: "#ffaa00" }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                              label={(entry: any) => entry.value > 0 ? `${entry.name}: ${entry.value}` : ''}
+                              labelLine={false}
+                            >
+                              {(analyticsData?.classificationBreakdown || []).map((entry: any, index: number) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(0, 0, 0, 0.85)', 
+                                border: 'none',
+                                borderRadius: '4px',
+                                color: 'white' 
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-2 space-y-2">
+                        {(analyticsData?.classificationBreakdown || []).map((entry: any, index: number) => (
+                          <div key={index} className="flex items-center text-sm">
+                            <div className="h-3 w-3 rounded-full mr-2" style={{ backgroundColor: entry.color }}></div>
+                            <span>{entry.name}</span>
+                            <span className="ml-auto font-semibold">{entry.value} videos</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                
                 {/* Charts Row 1 */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   <Card className="col-span-1 border-0 shadow-md">

@@ -452,6 +452,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (allVideos.filter(v => v.analysis && v.analysis.isDeepfake !== undefined).length / allVideos.length) * 100 : 
         100;
       
+      // Calculate classification breakdown
+      const authenticCount = allVideos.filter(v => !v.analysis.isDeepfake && v.analysis.confidence < 0.7).length;
+      const deepfakeCount = allVideos.filter(v => v.analysis.isDeepfake).length;
+      const moderateCount = allVideos.filter(v => !v.analysis.isDeepfake && v.analysis.confidence >= 0.7).length;
+      
+      const classificationBreakdown = [
+        { name: "Authentic", value: authenticCount, color: "#00ff88" },
+        { name: "Deepfake", value: deepfakeCount, color: "#ff3366" },
+        { name: "Moderate/Suspicious", value: moderateCount, color: "#ffaa00" }
+      ];
+
       // Construct complete analytics response
       const stats = {
         summary: {
@@ -464,7 +475,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         detectionRates,
         detectionTypes,
         userGrowth,
-        processingTimes
+        processingTimes,
+        classificationBreakdown
       };
       
       res.json(stats);
