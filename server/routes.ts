@@ -417,6 +417,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // System logs endpoint - retrieves logs from the database
+  app.get("/api/admin/logs", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // In a real app, we would check proper admin status
+      if (!req.user.username.includes("admin")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Get logs from storage (database)
+      const logs = await storage.getSystemLogs();
+      
+      // Add a log entry for this logs access
+      await storage.addSystemLog({
+        type: "info",
+        source: "admin",
+        message: "System logs accessed",
+        details: `Admin user: ${req.user.username}`
+      });
+      
+      res.json(logs);
+    } catch (error) {
+      // Log the error
+      await storage.addSystemLog({
+        type: "error",
+        source: "api",
+        message: "Failed to fetch system logs",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+      
+      res.status(500).json({ 
+        message: "Failed to fetch system logs",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

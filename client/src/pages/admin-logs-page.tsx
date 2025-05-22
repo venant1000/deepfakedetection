@@ -33,61 +33,59 @@ export default function AdminLogsPage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [logType, setLogType] = useState("all");
+  const [logs, setLogs] = useState<{
+    id: string;
+    timestamp: string;
+    type: string;
+    source: string;
+    message: string;
+    details: string;
+  }[]>([]);
   
-  // Mock logs data - would be replaced with actual API data
-  const [logs, setLogs] = useState([
-    {
-      id: "log1",
-      timestamp: "2025-05-21T14:32:18Z",
-      type: "error",
-      source: "api",
-      message: "Failed to process video analysis request",
-      details: "Error: 500 Internal Server Error"
-    },
-    {
-      id: "log2",
-      timestamp: "2025-05-21T13:56:42Z",
-      type: "info",
-      source: "auth",
-      message: "User login successful",
-      details: "User: admin"
-    },
-    {
-      id: "log3",
-      timestamp: "2025-05-21T13:45:11Z",
-      type: "warning",
-      source: "storage",
-      message: "High storage usage detected",
-      details: "Current usage: 85%"
-    },
-    {
-      id: "log4",
-      timestamp: "2025-05-21T12:32:09Z",
-      type: "info",
-      source: "system",
-      message: "System update completed",
-      details: "Version 2.3.0 installed successfully"
-    },
-    {
-      id: "log5",
-      timestamp: "2025-05-21T11:18:54Z",
-      type: "error",
-      source: "api",
-      message: "API rate limit exceeded",
-      details: "Too many requests from IP: 192.168.1.105"
-    },
-    {
-      id: "log6",
-      timestamp: "2025-05-21T10:42:33Z",
-      type: "info",
-      source: "auth",
-      message: "New user registered",
-      details: "Username: testuser"
-    },
-  ]);
+  // Fetch system logs from API
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/admin/logs", {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          if (response.status === 403) {
+            toast({
+              title: "Access denied",
+              description: "You don't have permission to view this page",
+              variant: "destructive",
+            });
+            navigate("/dashboard");
+            return;
+          }
+          throw new Error("Failed to fetch system logs");
+        }
+
+        const data = await response.json();
+        console.log("System logs loaded from database:", data);
+        setLogs(data);
+      } catch (error) {
+        console.error("Error fetching system logs:", error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to load system logs",
+          variant: "destructive",
+        });
+        // Initialize with empty logs array instead of mocked data
+        setLogs([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, [toast, navigate]);
 
   // Format timestamp for display
   const formatTimestamp = (timestamp: string) => {

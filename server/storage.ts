@@ -10,6 +10,16 @@ import { randomBytes, createHash } from "crypto";
 
 const MemoryStore = createMemoryStore(session);
 
+// Define the system log type
+export type SystemLog = {
+  id: string;
+  timestamp: string;
+  type: 'error' | 'warning' | 'info';
+  source: string;
+  message: string;
+  details: string;
+};
+
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -25,6 +35,10 @@ export interface IStorage {
   getVideoCount(): Promise<number>;
   getDeepfakeCount(): Promise<number>;
   
+  // System logs operations
+  getSystemLogs(): Promise<SystemLog[]>;
+  addSystemLog(log: Omit<SystemLog, 'id' | 'timestamp'>): Promise<SystemLog>;
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -32,13 +46,17 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private videoAnalyses: Map<string, VideoAnalysisResult>;
+  private systemLogs: Map<string, SystemLog>;
   public sessionStore: session.Store;
   private currentId: number;
+  private logId: number;
 
   constructor() {
     this.users = new Map();
     this.videoAnalyses = new Map();
+    this.systemLogs = new Map();
     this.currentId = 1;
+    this.logId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
     });
@@ -54,6 +72,23 @@ export class MemStorage implements IStorage {
     
     this.users.set(admin.id, admin);
     console.log("Created default admin user");
+    
+    // Add initial system logs
+    const initialLog: Omit<SystemLog, 'id' | 'timestamp'> = {
+      type: "info",
+      source: "system", 
+      message: "System initialized",
+      details: "DeepGuard AI system started successfully"
+    };
+    this.addSystemLog(initialLog);
+    
+    const adminLog: Omit<SystemLog, 'id' | 'timestamp'> = {
+      type: "info",
+      source: "auth",
+      message: "Default admin user created",
+      details: "Username: admin"
+    };
+    this.addSystemLog(adminLog);
   }
 
   // User methods
@@ -121,6 +156,27 @@ export class MemStorage implements IStorage {
     return Array.from(this.videoAnalyses.values()).filter(
       (analysis) => analysis.analysis.isDeepfake
     ).length;
+  }
+  
+  // System logs methods
+  async getSystemLogs(): Promise<SystemLog[]> {
+    return Array.from(this.systemLogs.values()).sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }
+  
+  async addSystemLog(log: Omit<SystemLog, 'id' | 'timestamp'>): Promise<SystemLog> {
+    const id = `log_${this.logId++}`;
+    const timestamp = new Date().toISOString();
+    
+    const newLog: SystemLog = {
+      id,
+      timestamp,
+      ...log
+    };
+    
+    this.systemLogs.set(id, newLog);
+    return newLog;
   }
 }
 
