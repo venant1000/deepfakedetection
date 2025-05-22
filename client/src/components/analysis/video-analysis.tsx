@@ -69,7 +69,8 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
         credentials: 'include'
       });
       
-      const data = await response.json();
+      // Parse response data with proper typing
+      const data: { analysis: string } = await response.json();
       
       if (response.ok && data && data.analysis) {
         // Update the enriched timeline with the analysis
@@ -89,6 +90,8 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
             analysis: data.analysis
           });
         }
+        
+        return data.analysis;
       } else {
         throw new Error("Failed to get analysis from the API");
       }
