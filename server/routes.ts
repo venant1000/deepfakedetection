@@ -75,13 +75,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
   
-  // Create a simple video endpoint for demo purposes
+  // Video serving endpoint
   app.get("/uploads/:videoId", async (req, res) => {
     try {
-      // For demonstration purposes, we'll return a simple MP4 video stream
-      // In a production app, we would retrieve the specific video file for this ID from storage
-      res.setHeader('Content-Type', 'video/mp4');
-      
       // Check if video exists in our analysis database
       const videoId = req.params.videoId;
       const userId = req.user?.id || 0; // Provide default value if user ID is undefined
@@ -91,16 +87,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).send("Video not found");
       }
       
-      // In a real implementation, we would stream the actual video file
-      // For demo, we embed a video in base64 format - in production we'd use real storage
-      // Use already imported fs and path modules instead of require
+      // Set proper content type for video response
+      res.setHeader('Content-Type', 'video/mp4');
       
-      // Use our demo video for all uploads in this prototype
-      const videoPath = path.join(process.cwd(), 'public', 'sample.mp4');
+      // Check if we have the video stored in uploads directory (this is where we save uploaded videos)
+      const uploadedVideoPath = path.join(process.cwd(), 'uploads', `${videoId}.mp4`);
       
-      // If we have a demo video, stream it
-      if (fs.existsSync(videoPath)) {
-        fs.createReadStream(videoPath).pipe(res);
+      // If the original uploaded video exists, serve that
+      if (fs.existsSync(uploadedVideoPath)) {
+        fs.createReadStream(uploadedVideoPath).pipe(res);
+        return;
+      }
+      
+      // Otherwise, look for temporary file saved during analysis
+      const tempVideoPath = path.join(process.cwd(), 'uploads', `${videoId}.${videoAnalysis.fileName.split('.').pop()}`);
+      
+      if (fs.existsSync(tempVideoPath)) {
+        fs.createReadStream(tempVideoPath).pipe(res);
+        return;
+      }
+      
+      // Fallback to sample video if no actual uploaded video is found
+      const samplePath = path.join(process.cwd(), 'public', 'sample.mp4');
+      if (fs.existsSync(samplePath)) {
+        fs.createReadStream(samplePath).pipe(res);
       } else {
         // Fallback to a simple message if no video is available
         res.status(404).send("Video file not available");
