@@ -188,12 +188,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
       
-      // Simplified stats for the demo
+      // Get basic stats from database
+      const totalUsers = await storage.getUserCount();
+      const videosAnalyzed = await storage.getVideoCount();
+      const deepfakesDetected = await storage.getDeepfakeCount();
+      
+      // Get all videos to generate data for charts
+      const users = await storage.getAllUsers();
+      const allVideos: VideoAnalysisResult[] = [];
+      
+      // Collect all video analyses
+      for (const user of users) {
+        const userVideos = await storage.getUserVideoAnalyses(user.id);
+        allVideos.push(...userVideos);
+      }
+      
+      // Sort videos by date
+      allVideos.sort((a, b) => new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime());
+      
+      // Generate daily uploads data based on actual upload dates
+      const videosByDate = new Map();
+      const now = new Date();
+      
+      // Initialize the last 7 days
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        videosByDate.set(formattedDate, 0);
+      }
+      
+      // Count videos uploaded on each day
+      allVideos.forEach(video => {
+        const uploadDate = new Date(video.uploadDate);
+        // Only count videos from the last 7 days
+        if (now.getTime() - uploadDate.getTime() <= 7 * 24 * 60 * 60 * 1000) {
+          const formattedDate = uploadDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          if (videosByDate.has(formattedDate)) {
+            videosByDate.set(formattedDate, videosByDate.get(formattedDate) + 1);
+          }
+        }
+      });
+      
+      // Convert to array format for the frontend
+      const dailyUploads = Array.from(videosByDate.entries()).map(([date, count]) => ({
+        date,
+        count
+      }));
+      
+      // Calculate detection rates by day
+      const detectionRates = dailyUploads.map(item => {
+        const date = item.date;
+        const dateVideos = allVideos.filter(video => {
+          const uploadDate = new Date(video.uploadDate);
+          return uploadDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) === date;
+        });
+        
+        const totalForDay = dateVideos.length;
+        const deepfakesForDay = dateVideos.filter(video => video.analysis.isDeepfake).length;
+        const rate = totalForDay > 0 ? (deepfakesForDay / totalForDay) * 100 : 0;
+        
+        return {
+          date,
+          rate: parseFloat(rate.toFixed(1))
+        };
+      });
+      
+      // Calculate deepfake types from analysis data
+      const deepfakeTypes = new Map();
+      deepfakeTypes.set("Facial Manipulation", 0);
+      deepfakeTypes.set("Voice Synthesis", 0);
+      deepfakeTypes.set("Body Movements", 0);
+      deepfakeTypes.set("Background Alterations", 0);
+      
+      // Count different types of deepfakes based on findings
+      allVideos.forEach(video => {
+        if (video.analysis.isDeepfake && video.analysis.findings) {
+          video.analysis.findings.forEach(finding => {
+            if (finding.title.includes("Facial")) {
+              deepfakeTypes.set("Facial Manipulation", deepfakeTypes.get("Facial Manipulation") + 1);
+            } else if (finding.title.includes("Audio")) {
+              deepfakeTypes.set("Voice Synthesis", deepfakeTypes.get("Voice Synthesis") + 1);
+            } else if (finding.title.includes("movement")) {
+              deepfakeTypes.set("Body Movements", deepfakeTypes.get("Body Movements") + 1);
+            } else if (finding.title.includes("Light")) {
+              deepfakeTypes.set("Background Alterations", deepfakeTypes.get("Background Alterations") + 1);
+            }
+          });
+        }
+      });
+      
+      // Convert to array format for the frontend
+      const detectionTypes = Array.from(deepfakeTypes.entries()).map(([name, value]) => ({
+        name,
+        value: value || 0 // Ensure we don't have undefined values
+      }));
+      
+      // Calculate user growth over time
+      const usersByWeek = new Map();
+      const now2 = new Date();
+      
+      // Initialize the last 5 weeks
+      for (let i = 4; i >= 0; i--) {
+        const date = new Date(now2);
+        date.setDate(date.getDate() - (i * 7));
+        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        usersByWeek.set(formattedDate, 0);
+      }
+      
+      // Count users registered by week
+      users.forEach(user => {
+        const creationDate = new Date(user.createdAt);
+        // Only consider users from the last 5 weeks
+        if (now2.getTime() - creationDate.getTime() <= 5 * 7 * 24 * 60 * 60 * 1000) {
+          // Find the week this user falls into
+          for (let i = 4; i >= 0; i--) {
+            const weekStart = new Date(now2);
+            weekStart.setDate(weekStart.getDate() - (i * 7));
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 7);
+            
+            if (creationDate >= weekStart && creationDate < weekEnd) {
+              const formattedDate = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              if (usersByWeek.has(formattedDate)) {
+                usersByWeek.set(formattedDate, usersByWeek.get(formattedDate) + 1);
+              }
+              break;
+            }
+          }
+        }
+      });
+      
+      // Convert to array format for the frontend
+      const userGrowth = Array.from(usersByWeek.entries()).map(([date, users]) => ({
+        date,
+        users
+      }));
+      
+      // Calculate processing time distributions
+      const processingTimesMap = new Map();
+      processingTimesMap.set("<30s", 0);
+      processingTimesMap.set("30s-1m", 0);
+      processingTimesMap.set("1m-2m", 0);
+      processingTimesMap.set("2m-5m", 0);
+      processingTimesMap.set(">5m", 0);
+      
+      // Categorize videos by processing time
+      allVideos.forEach(video => {
+        const processingTime = video.analysis.processingTime || 0;
+        
+        if (processingTime < 30) {
+          processingTimesMap.set("<30s", processingTimesMap.get("<30s") + 1);
+        } else if (processingTime < 60) {
+          processingTimesMap.set("30s-1m", processingTimesMap.get("30s-1m") + 1);
+        } else if (processingTime < 120) {
+          processingTimesMap.set("1m-2m", processingTimesMap.get("1m-2m") + 1);
+        } else if (processingTime < 300) {
+          processingTimesMap.set("2m-5m", processingTimesMap.get("2m-5m") + 1);
+        } else {
+          processingTimesMap.set(">5m", processingTimesMap.get(">5m") + 1);
+        }
+      });
+      
+      // Convert to array format for the frontend
+      const processingTimes = Array.from(processingTimesMap.entries()).map(([timeRange, count]) => ({
+        timeRange,
+        count
+      }));
+      
+      // System health is a derived metric from actual system performance
+      // Here we'll calculate it based on successful video analysis ratio
+      const systemHealth = allVideos.length > 0 ? 
+        (allVideos.filter(v => v.analysis && v.analysis.isDeepfake !== undefined).length / allVideos.length) * 100 : 
+        100;
+      
+      // Construct complete analytics response
       const stats = {
-        totalUsers: await storage.getUserCount(),
-        videosAnalyzed: await storage.getVideoCount(),
-        deepfakesDetected: await storage.getDeepfakeCount(),
-        systemHealth: 98.7
+        summary: {
+          totalUsers,
+          videoCount: videosAnalyzed,
+          deepfakesDetected,
+          systemHealth: parseFloat(systemHealth.toFixed(1))
+        },
+        dailyUploads,
+        detectionRates,
+        detectionTypes,
+        userGrowth,
+        processingTimes
       };
       
       res.json(stats);
