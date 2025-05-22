@@ -13,10 +13,19 @@ interface VideoAnalysisProps {
 }
 
 export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
-  const [progressPosition, setProgressPosition] = useState(35);
+  const [progressPosition, setProgressPosition] = useState(0);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const [currentTime, setCurrentTime] = useState("1:18");
+  const [currentTime, setCurrentTime] = useState("0:00");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [totalDuration, setTotalDuration] = useState("2:30");
+  const [totalSeconds, setTotalSeconds] = useState(150); // Default 2:30 in seconds
+
+  // Set initial duration when the component loads
+  useEffect(() => {
+    // If we had actual video duration, we would use it here
+    setTotalDuration("2:30"); // Default duration
+    setTotalSeconds(150); // 2:30 in seconds
+  }, []);
 
   useEffect(() => {
     if (isPlaying) {
@@ -29,7 +38,6 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
           }
           
           // Update current time based on progress
-          const totalSeconds = 222; // 3:42 in seconds
           const currentSeconds = Math.floor(totalSeconds * (newValue / 100));
           const minutes = Math.floor(currentSeconds / 60);
           const seconds = currentSeconds % 60;
@@ -41,7 +49,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
       
       return () => clearInterval(interval);
     }
-  }, [isPlaying]);
+  }, [isPlaying, totalSeconds]);
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -57,7 +65,6 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
     setProgressPosition(Math.min(Math.max(newPosition, 0), 100));
     
     // Update current time based on new position
-    const totalSeconds = 222; // 3:42 in seconds
     const currentSeconds = Math.floor(totalSeconds * (newPosition / 100));
     const minutes = Math.floor(currentSeconds / 60);
     const seconds = currentSeconds % 60;
@@ -117,7 +124,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
                   ></div>
                 </div>
                 
-                <span className="text-sm text-white">{currentTime} / 3:42</span>
+                <span className="text-sm text-white">{currentTime} / {totalDuration}</span>
               </div>
             </div>
           </div>
@@ -219,11 +226,11 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
           {/* Time markers */}
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>0:00</span>
-            <span>0:45</span>
+            <span>0:30</span>
+            <span>1:00</span>
             <span>1:30</span>
-            <span>2:15</span>
-            <span>3:00</span>
-            <span>3:42</span>
+            <span>2:00</span>
+            <span>{totalDuration}</span>
           </div>
         </div>
       </div>
