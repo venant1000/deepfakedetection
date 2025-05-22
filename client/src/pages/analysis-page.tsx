@@ -160,7 +160,7 @@ export default function AnalysisPage() {
   });
 
   // Calculate duration string to display
-  const durationStr = analysis.analysis.processingTime ? 
+  const durationStr = analysis.analysis && analysis.analysis.processingTime ? 
     formatDuration(analysis.analysis.processingTime) : "0:00";
 
   return (
@@ -227,9 +227,27 @@ export default function AnalysisPage() {
           </div>
         </div>
         
-        <AnalysisSummary analysis={analysis.analysis} />
-        <VideoAnalysis analysis={analysis.analysis} fileName={analysis.fileName} />
-        <DeepfakeDetails findings={analysis.analysis.findings || []} />
+        {analysis.analysis ? (
+          <>
+            <AnalysisSummary analysis={analysis.analysis} />
+            <VideoAnalysis analysis={analysis.analysis} fileName={analysis.fileName} />
+            <DeepfakeDetails findings={(analysis.analysis && analysis.analysis.findings) || []} />
+          </>
+        ) : (
+          <div className="glass rounded-xl p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-4 text-muted-foreground">
+              <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            <h2 className="text-2xl font-bold mb-2">Analysis Not Available</h2>
+            <p className="text-muted-foreground mb-6">
+              The analysis for this video file is not available or still processing.
+              Please check back later or try uploading the file again.
+            </p>
+            <Button onClick={() => navigate("/dashboard")}>Return to Dashboard</Button>
+          </div>
+        )}
       </div>
     </div>
   );
