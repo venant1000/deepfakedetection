@@ -85,8 +85,8 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
               <div>
                 <h3 className={`font-semibold ${analysis.isDeepfake ? 'text-[#ff3366]' : 'text-primary'}`}>
                   {analysis.isDeepfake 
-                    ? `Deepfake Detected (${analysis.confidence}% Confidence)` 
-                    : `Content Appears Authentic (${analysis.confidence}% Confidence)`}
+                    ? `Deepfake Detected (${Math.round(analysis.confidence * 100)}% Confidence)` 
+                    : `Content Appears Authentic (${Math.round(analysis.confidence * 100)}% Confidence)`}
                 </h3>
                 <p className="text-muted-foreground mt-1">
                   {analysis.isDeepfake 
@@ -176,11 +176,11 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
                 cx="50" 
                 cy="50" 
                 strokeDasharray="251.2" 
-                strokeDashoffset={(100 - analysis.confidence) / 100 * 251.2}
+                strokeDashoffset={(100 - (analysis.confidence * 100)) / 100 * 251.2}
               />
             </svg>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-              <div className="text-4xl font-bold">{analysis.confidence}%</div>
+              <div className="text-4xl font-bold">{Math.round(analysis.confidence * 100)}%</div>
               <div className="text-sm text-muted-foreground">{analysis.isDeepfake ? "Deepfake" : "Authentic"}</div>
             </div>
           </div>

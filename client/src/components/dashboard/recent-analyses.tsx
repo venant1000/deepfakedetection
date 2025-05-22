@@ -134,7 +134,7 @@ export default function RecentAnalyses() {
                   <td className="py-4 text-muted-foreground">{analysis.fileSize ? `${(analysis.fileSize / 1024).toFixed(1)} MB` : "N/A"}</td>
                   <td className="py-4">
                     <span className={`py-1 px-3 rounded-full text-sm ${getStatusColor(analysis.analysis.isDeepfake, analysis.analysis.confidence)}`}>
-                      {getStatusText(analysis.analysis.isDeepfake, analysis.analysis.confidence)} ({analysis.analysis.confidence}%)
+                      {getStatusText(analysis.analysis.isDeepfake, analysis.analysis.confidence)} ({Math.round(analysis.analysis.confidence * 100)}%)
                     </span>
                   </td>
                   <td className="py-4">

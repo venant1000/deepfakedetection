@@ -400,13 +400,13 @@ export default function HistoryPage() {
                               <div className="w-full bg-muted rounded-full h-2">
                                 <div 
                                   className={`h-2 rounded-full ${
-                                    analysis.confidence > 90 ? 'bg-green-500' : 
-                                    analysis.confidence > 70 ? 'bg-yellow-500' : 'bg-red-500'
+                                    (analysis.confidence * 100) > 90 ? 'bg-green-500' : 
+                                    (analysis.confidence * 100) > 70 ? 'bg-yellow-500' : 'bg-red-500'
                                   }`} 
-                                  style={{ width: `${analysis.confidence}%` }}
+                                  style={{ width: `${Math.round(analysis.confidence * 100)}%` }}
                                 />
                               </div>
-                              <span className="text-xs font-medium">{analysis.confidence}%</span>
+                              <span className="text-xs font-medium">{Math.round(analysis.confidence * 100)}%</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
@@ -571,15 +571,15 @@ export default function HistoryPage() {
                       <div className="mt-2">
                         <div className="text-xs font-medium flex justify-between mb-1">
                           <span>Confidence</span>
-                          <span>{analysis.confidence}%</span>
+                          <span>{Math.round(analysis.confidence * 100)}%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-1.5">
                           <div 
                             className={`h-1.5 rounded-full ${
-                              analysis.confidence > 90 ? 'bg-green-500' : 
-                              analysis.confidence > 70 ? 'bg-yellow-500' : 'bg-red-500'
+                              (analysis.confidence * 100) > 90 ? 'bg-green-500' : 
+                              (analysis.confidence * 100) > 70 ? 'bg-yellow-500' : 'bg-red-500'
                             }`} 
-                            style={{ width: `${analysis.confidence}%` }}
+                            style={{ width: `${Math.round(analysis.confidence * 100)}%` }}
                           />
                         </div>
                       </div>
