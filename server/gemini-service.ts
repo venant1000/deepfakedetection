@@ -29,9 +29,11 @@ Your expertise includes:
 export async function processDeepfakeQuery(userMessage: string): Promise<string> {
   try {
     // Get API key from environment
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    console.log("Debug - API keys: GEMINI_API_KEY exists:", !!process.env.GEMINI_API_KEY, "GOOGLE_API_KEY exists:", !!process.env.GOOGLE_API_KEY);
+    
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not configured in environment");
+      throw new Error("Neither GEMINI_API_KEY nor GOOGLE_API_KEY is configured in environment");
     }
     
     // Initialize Gemini API
@@ -65,9 +67,11 @@ Remember to focus only on educational information about deepfakes, their detecti
 export async function getDeepfakeTips(): Promise<string[]> {
   try {
     // Get API key from environment
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    console.log("Debug - API keys: GEMINI_API_KEY exists:", !!process.env.GEMINI_API_KEY, "GOOGLE_API_KEY exists:", !!process.env.GOOGLE_API_KEY);
+    
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not configured in environment");
+      throw new Error("Neither GEMINI_API_KEY nor GOOGLE_API_KEY is configured in environment");
     }
     
     // Initialize Gemini API
