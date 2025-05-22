@@ -235,7 +235,6 @@ export default function HelpPage() {
             <TabsTrigger value="faq">FAQ</TabsTrigger>
             <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
-            <TabsTrigger value="contact">Contact Support</TabsTrigger>
           </TabsList>
           
           {/* FAQ Tab */}
