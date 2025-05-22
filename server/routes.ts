@@ -42,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Function to run deepfake analysis using Python model
   async function runDeepfakeAnalysis(videoPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      const pythonScript = path.join(__dirname, 'deepfake_detector.py');
+      const pythonScript = path.join(__dirname, 'simple_detector.py');
       const pythonProcess = spawn('python3', [pythonScript, videoPath]);
       
       let stdout = '';
