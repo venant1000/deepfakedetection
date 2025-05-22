@@ -52,22 +52,22 @@ export default function HelpPage() {
     },
     {
       id: "account",
-      name: "Account & Billing",
+      name: "Account Information",
       questions: [
         {
-          id: "free-tier",
-          question: "What's included in the free tier?",
-          answer: "The free tier includes up to 5 video analyses per month, limited to videos under 2 minutes in length. You also get access to basic reports and educational resources."
+          id: "account-features",
+          question: "What features are available in my account?",
+          answer: "All accounts have access to our full range of features including video analysis, detailed reports, history tracking, and educational resources on deepfake detection."
         },
         {
-          id: "subscription",
-          question: "How do I upgrade my subscription?",
-          answer: "You can upgrade your subscription by visiting your Account Settings page and selecting the 'Upgrade' option. We offer several plans to suit different needs, including monthly and annual billing options."
+          id: "account-limits",
+          question: "Are there any usage limits?",
+          answer: "Currently, there are no strict limits on video analysis. We recommend keeping videos under 10 minutes in length for optimal performance and faster processing times."
         },
         {
-          id: "cancel",
-          question: "How do I cancel my subscription?",
-          answer: "You can cancel your subscription at any time from your Account Settings page. Your premium features will remain available until the end of your current billing period."
+          id: "account-inactive",
+          question: "What happens to inactive accounts?",
+          answer: "Accounts that remain inactive for more than 12 months may be archived for security purposes. You can always log back in to reactivate your account and access your analysis history."
         }
       ]
     },
@@ -104,7 +104,7 @@ export default function HelpPage() {
         {
           id: "size-limits",
           question: "Is there a file size limit?",
-          answer: "Yes, the maximum file size is 100MB for free tier users and 500MB for premium users. If your video exceeds these limits, consider compressing it or trimming it to focus on the specific section you want to analyze."
+          answer: "Yes, the maximum file size is 500MB for all users. If your video exceeds this limit, consider compressing it or trimming it to focus on the specific section you want to analyze."
         },
         {
           id: "browser-compatibility",
@@ -685,23 +685,23 @@ export default function HelpPage() {
                   </CardHeader>
                   <CardContent>
                     <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="billing-faq">
+                      <AccordionItem value="account-settings-faq">
                         <AccordionTrigger className="text-left">
-                          How can I change my subscription plan?
+                          How can I update my account information?
                         </AccordionTrigger>
                         <AccordionContent>
                           <p className="text-muted-foreground">
-                            You can change your subscription plan at any time by going to your Account Settings page and selecting the "Billing" tab. From there, you can upgrade, downgrade, or cancel your subscription.
+                            You can update your account information at any time by going to your Account Settings page. From there, you can change your email, password, and notification preferences.
                           </p>
                         </AccordionContent>
                       </AccordionItem>
-                      <AccordionItem value="refund-faq">
+                      <AccordionItem value="account-deletion-faq">
                         <AccordionTrigger className="text-left">
-                          What is your refund policy?
+                          How can I delete my account?
                         </AccordionTrigger>
                         <AccordionContent>
                           <p className="text-muted-foreground">
-                            We offer a 30-day money-back guarantee for all subscription plans. If you're not satisfied with our service within the first 30 days, you can request a full refund by contacting our support team.
+                            If you wish to delete your account, please contact our support team. We'll process your request within 7 business days and permanently remove all your data from our systems.
                           </p>
                         </AccordionContent>
                       </AccordionItem>
