@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import Sidebar from "@/components/layout/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -28,6 +29,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VideoAnalysisResult } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+
+interface AnalysisItem {
+  id: string;
+  fileName: string;
+  uploadDate: string;
+  fileSize?: number;
+  duration?: string;
+  result: string;
+  confidence: number;
+  thumbnail?: string;
+}
 
 export default function HistoryPage() {
   const { user } = useAuth();
@@ -35,90 +49,38 @@ export default function HistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [resultFilter, setResultFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
+  const [analysisHistory, setAnalysisHistory] = useState<AnalysisItem[]>([]);
   
-  // Mock video analysis history data for demonstration
-  const analysisHistory = [
-    {
-      id: "vid123",
-      fileName: "news_interview.mp4",
-      uploadDate: "2025-05-21T14:32:18Z",
-      fileSize: 24.5,
-      duration: "2:45",
-      result: "deepfake",
-      confidence: 98.2,
-      thumbnail: "/thumbnails/video1.jpg"
-    },
-    {
-      id: "vid124",
-      fileName: "product_review.mp4",
-      uploadDate: "2025-05-20T10:15:42Z",
-      fileSize: 18.3,
-      duration: "3:12",
-      result: "authentic",
-      confidence: 95.7,
-      thumbnail: "/thumbnails/video2.jpg"
-    },
-    {
-      id: "vid125",
-      fileName: "speech_clip.mp4",
-      uploadDate: "2025-05-18T16:48:33Z",
-      fileSize: 12.1,
-      duration: "1:30",
-      result: "deepfake",
-      confidence: 89.4,
-      thumbnail: "/thumbnails/video3.jpg"
-    },
-    {
-      id: "vid126",
-      fileName: "viral_video.mp4",
-      uploadDate: "2025-05-15T09:22:11Z",
-      fileSize: 32.7,
-      duration: "4:18",
-      result: "authentic",
-      confidence: 97.1,
-      thumbnail: "/thumbnails/video4.jpg"
-    },
-    {
-      id: "vid127",
-      fileName: "testimony.mp4",
-      uploadDate: "2025-05-10T11:05:27Z",
-      fileSize: 28.2,
-      duration: "5:45",
-      result: "inconclusive",
-      confidence: 62.3,
-      thumbnail: "/thumbnails/video5.jpg"
-    },
-    {
-      id: "vid128",
-      fileName: "celebrity_interview.mp4",
-      uploadDate: "2025-05-08T13:42:19Z",
-      fileSize: 42.1,
-      duration: "8:20",
-      result: "deepfake",
-      confidence: 99.1,
-      thumbnail: "/thumbnails/video6.jpg"
-    },
-    {
-      id: "vid129",
-      fileName: "social_media_post.mp4",
-      uploadDate: "2025-05-05T17:33:52Z",
-      fileSize: 8.4,
-      duration: "0:45",
-      result: "inconclusive",
-      confidence: 58.2,
-      thumbnail: "/thumbnails/video7.jpg"
-    },
-    {
-      id: "vid130",
-      fileName: "press_conference.mp4",
-      uploadDate: "2025-05-02T15:11:08Z",
-      fileSize: 65.3,
-      duration: "12:34",
-      result: "authentic",
-      confidence: 96.8,
-      thumbnail: "/thumbnails/video8.jpg"
+  // Fetch real video analyses from the API
+  const { data: videoAnalyses, isLoading, error } = useQuery<VideoAnalysisResult[]>({
+    queryKey: ["/api/videos"],
+    enabled: !!user
+  });
+
+  // Process video analyses data when it loads
+  useEffect(() => {
+    if (videoAnalyses && videoAnalyses.length > 0) {
+      const processedAnalyses = videoAnalyses.map(analysis => {
+        // Extract video duration if available (would be stored in analysis data in a real implementation)
+        const duration = "2:30"; // This would be extracted from actual video metadata
+        
+        return {
+          id: analysis.id,
+          fileName: analysis.fileName,
+          uploadDate: analysis.uploadDate,
+          fileSize: analysis.fileSize,
+          duration: duration,
+          result: analysis.analysis.isDeepfake ? "deepfake" : analysis.analysis.confidence > 30 ? "authentic" : "inconclusive",
+          confidence: analysis.analysis.confidence,
+          // In a real implementation, thumbnails would be generated and stored
+          thumbnail: "/thumbnails/default.jpg"
+        };
+      });
+      setAnalysisHistory(processedAnalyses);
+    } else {
+      setAnalysisHistory([]);
     }
-  ];
+  }, [videoAnalyses]);
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -181,15 +143,55 @@ export default function HistoryPage() {
     return matchesSearch && matchesResult && matchesTime;
   });
 
-  // Statistics from history data
+  // Calculate real statistics from the data
   const stats = {
     totalAnalyses: analysisHistory.length,
     deepfakes: analysisHistory.filter(item => item.result === "deepfake").length,
     authentic: analysisHistory.filter(item => item.result === "authentic").length,
     inconclusive: analysisHistory.filter(item => item.result === "inconclusive").length,
-    averageConfidence: Math.round(
-      analysisHistory.reduce((sum, item) => sum + item.confidence, 0) / analysisHistory.length
-    )
+    averageConfidence: analysisHistory.length > 0 
+      ? Math.round(analysisHistory.reduce((sum, item) => sum + item.confidence, 0) / analysisHistory.length) 
+      : 0
+  };
+
+  // Handle export functionality
+  const handleExportHistory = () => {
+    if (analysisHistory.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "You don't have any analyses to export yet.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ["File Name", "Date", "Size (MB)", "Result", "Confidence"];
+    const csvContent = [
+      headers.join(","),
+      ...analysisHistory.map(item => [
+        item.fileName,
+        formatDate(item.uploadDate),
+        item.fileSize || 0,
+        item.result,
+        item.confidence
+      ].join(","))
+    ].join("\n");
+
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `deepfake-analysis-history-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export successful",
+      description: "Your analysis history has been exported as a CSV file."
+    });
   };
 
   return (
@@ -204,52 +206,78 @@ export default function HistoryPage() {
             <p className="text-muted-foreground">View your past video analyses and results</p>
           </div>
           
-          <Button className="bg-gradient-to-r from-primary to-secondary text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" x2="12" y1="15" y2="3"/>
-            </svg>
-            Export History
+          <Button 
+            className="bg-gradient-to-r from-primary to-secondary text-black"
+            onClick={handleExportHistory}
+            disabled={isLoading || analysisHistory.length === 0}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" x2="12" y1="15" y2="3"/>
+                </svg>
+                Export History
+              </>
+            )}
           </Button>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold">{stats.totalAnalyses}</span>
-              <span className="text-sm text-muted-foreground">Total Analyses</span>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold text-red-500">{stats.deepfakes}</span>
-              <span className="text-sm text-muted-foreground">Deepfakes Detected</span>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold text-green-500">{stats.authentic}</span>
-              <span className="text-sm text-muted-foreground">Authentic Videos</span>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold text-gray-400">{stats.inconclusive}</span>
-              <span className="text-sm text-muted-foreground">Inconclusive</span>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold">{stats.averageConfidence}%</span>
-              <span className="text-sm text-muted-foreground">Avg. Confidence</span>
-            </CardContent>
-          </Card>
+          {isLoading ? (
+            Array(5).fill(0).map((_, index) => (
+              <Card key={index}>
+                <CardContent className="p-4 flex flex-col items-center justify-center min-h-[80px]">
+                  <div className="animate-pulse h-8 w-12 bg-muted rounded mb-2"></div>
+                  <div className="animate-pulse h-4 w-24 bg-muted rounded"></div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <>
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-bold">{stats.totalAnalyses}</span>
+                  <span className="text-sm text-muted-foreground">Total Analyses</span>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-bold text-red-500">{stats.deepfakes}</span>
+                  <span className="text-sm text-muted-foreground">Deepfakes Detected</span>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-bold text-green-500">{stats.authentic}</span>
+                  <span className="text-sm text-muted-foreground">Authentic Videos</span>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-bold text-gray-400">{stats.inconclusive}</span>
+                  <span className="text-sm text-muted-foreground">Inconclusive</span>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-bold">{stats.averageConfidence}%</span>
+                  <span className="text-sm text-muted-foreground">Avg. Confidence</span>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Filters and Search */}
@@ -315,7 +343,38 @@ export default function HistoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredHistory.length > 0 ? (
+                    {isLoading ? (
+                      // Loading state with skeleton rows
+                      Array(5).fill(0).map((_, index) => (
+                        <TableRow key={`loading-${index}`}>
+                          <TableCell>
+                            <div className="animate-pulse h-4 w-32 bg-muted rounded"></div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="animate-pulse h-4 w-24 bg-muted rounded mb-1"></div>
+                            <div className="animate-pulse h-3 w-16 bg-muted rounded"></div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="animate-pulse h-4 w-12 bg-muted rounded"></div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="animate-pulse h-4 w-12 bg-muted rounded"></div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="animate-pulse h-5 w-20 bg-muted rounded"></div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="animate-pulse h-3 w-full bg-muted rounded mb-1"></div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-end gap-1">
+                              <div className="animate-pulse h-6 w-6 bg-muted rounded-full"></div>
+                              <div className="animate-pulse h-6 w-6 bg-muted rounded-full"></div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredHistory.length > 0 ? (
                       filteredHistory.map((analysis) => (
                         <TableRow key={analysis.id} className="hover:bg-muted/30 transition-colors">
                           <TableCell className="font-medium">
@@ -328,10 +387,10 @@ export default function HistoryPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {analysis.fileSize} MB
+                            {analysis.fileSize ? `${analysis.fileSize} MB` : 'N/A'}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {analysis.duration}
+                            {analysis.duration || 'N/A'}
                           </TableCell>
                           <TableCell>
                             {getResultBadge(analysis.result)}
@@ -365,14 +424,47 @@ export default function HistoryPage() {
                                   <circle cx="12" cy="12" r="3"/>
                                 </svg>
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  // Create a blob URL for downloading the raw analysis data
+                                  const data = videoAnalyses?.find(v => v.id === analysis.id);
+                                  if (data) {
+                                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                                    const url = URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.setAttribute("href", url);
+                                    link.setAttribute("download", `analysis-${data.id}.json`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    
+                                    toast({
+                                      title: "Download successful",
+                                      description: `Analysis data for ${data.fileName} has been downloaded.`
+                                    });
+                                  }
+                                }}
+                              >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                   <polyline points="7 10 12 15 17 10"/>
                                   <line x1="12" x2="12" y1="15" y2="3"/>
                                 </svg>
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8" 
+                                onClick={() => {
+                                  toast({
+                                    title: "Report Feature",
+                                    description: "The report feature will be available in a future update."
+                                  });
+                                }}
+                              >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"/>
                                 </svg>
@@ -384,7 +476,20 @@ export default function HistoryPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          No analyses found matching your filters
+                          {error ? (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12" y2="16"/>
+                              </svg>
+                              Error loading analyses. Please try again.
+                            </>
+                          ) : (
+                            searchTerm || resultFilter !== "all" || timeFilter !== "all" ?
+                              "No analyses found matching your filters" :
+                              "You haven't analyzed any videos yet. Upload a video to get started."
+                          )}
                         </TableCell>
                       </TableRow>
                     )}
