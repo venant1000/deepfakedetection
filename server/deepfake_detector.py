@@ -6,7 +6,9 @@ from PIL import Image
 import os
 import json
 import sys
+import time
 from torchvision import transforms
+from scipy.ndimage import gaussian_filter
 
 class LightweightDeepfakeDetector(nn.Module):
     """
@@ -106,18 +108,54 @@ class DeepfakeAnalyzer:
         cap.release()
         return frames, fps, frame_count
     
+    def preprocess_frame(self, frame):
+        """Apply preprocessing to improve accuracy for real videos"""
+        # Check if the frame has sufficient quality for reliable analysis
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+        
+        # Apply noise reduction
+        denoised = cv2.fastNlMeansDenoisingColored(frame, None, 10, 10, 7, 21)
+        
+        # Adjust color contrast to normalize lighting variations
+        lab = cv2.cvtColor(denoised, cv2.COLOR_RGB2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        cl = clahe.apply(l)
+        merged = cv2.merge((cl, a, b))
+        enhanced = cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
+        
+        # Check if the image quality is too low for reliable analysis
+        if blur_score < 50:  # Very blurry images often cause false positives
+            quality_factor = 0.7  # Reduce confidence for low-quality frames
+        else:
+            quality_factor = 1.0
+            
+        return enhanced, quality_factor
+    
     def analyze_frame(self, frame):
-        """Analyze a single frame for deepfake detection"""
-        pil_frame = Image.fromarray(frame)
+        """Analyze a single frame for deepfake detection with preprocessing"""
+        # Apply preprocessing
+        enhanced_frame, quality_factor = self.preprocess_frame(frame)
+        
+        # Convert to PIL image for the model
+        pil_frame = Image.fromarray(enhanced_frame)
         input_tensor = self.transform(pil_frame).unsqueeze(0).to(self.device)
         
         with torch.no_grad():
             outputs = self.model(input_tensor)
             probabilities = torch.softmax(outputs, dim=1)
-            confidence = probabilities[0][1].item()  # Probability of being deepfake
-            is_deepfake = confidence > 0.5
+            raw_confidence = probabilities[0][1].item()  # Probability of being deepfake
+            
+            # Apply quality adjustment
+            adjusted_confidence = raw_confidence * quality_factor
+            
+            # Apply additional threshold adjustment for more realistic results
+            # This makes the model more conservative in its deepfake predictions
+            confidence_threshold = 0.65  # Increased from 0.5 to reduce false positives
+            is_deepfake = adjusted_confidence > confidence_threshold
         
-        return is_deepfake, confidence
+        return is_deepfake, adjusted_confidence
     
     def analyze_video(self, video_path):
         """Analyze entire video and return detailed results"""
