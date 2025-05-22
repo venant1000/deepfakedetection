@@ -1,10 +1,51 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
 export default function AdminStats() {
-  const [stats, setStats] = useState([
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [statsData, setStatsData] = useState({
+    totalUsers: 0,
+    videoCount: 0,
+    deepfakesDetected: 0,
+    systemHealth: 100
+  });
+
+  // Fetch real data from the database
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/admin/stats", {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setStatsData({
+            totalUsers: data.summary.totalUsers,
+            videoCount: data.summary.videoCount,
+            deepfakesDetected: data.summary.deepfakesDetected,
+            systemHealth: data.summary.systemHealth
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin stats:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user?.username?.includes("admin")) {
+      fetchStats();
+    }
+  }, [user]);
+
+  const stats = [
     {
       title: "Total Users",
-      value: "12,543",
+      value: isLoading ? "..." : statsData.totalUsers.toLocaleString(),
       change: "+8.2%",
       isPositive: true,
       icon: (
@@ -20,7 +61,7 @@ export default function AdminStats() {
     },
     {
       title: "Videos Analyzed",
-      value: "98,720",
+      value: isLoading ? "..." : statsData.videoCount.toLocaleString(),
       change: "+12.4%",
       isPositive: true,
       icon: (
@@ -36,7 +77,7 @@ export default function AdminStats() {
     },
     {
       title: "Deepfakes Detected",
-      value: "32,184",
+      value: isLoading ? "..." : statsData.deepfakesDetected.toLocaleString(),
       change: "+17.9%",
       isPositive: false,
       icon: (
@@ -51,7 +92,7 @@ export default function AdminStats() {
     },
     {
       title: "System Health",
-      value: "98.7%",
+      value: isLoading ? "..." : `${statsData.systemHealth}%`,
       change: "+0.5%",
       isPositive: true,
       icon: (
@@ -65,7 +106,7 @@ export default function AdminStats() {
       bgColor: "bg-green-500/20",
       textColor: "text-green-400"
     }
-  ]);
+  ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
