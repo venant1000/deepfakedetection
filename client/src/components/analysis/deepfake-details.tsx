@@ -73,22 +73,38 @@ export default function DeepfakeDetails({ findings }: DeepfakeDetailsProps) {
       <h2 className="text-xl font-semibold mb-6">Detailed Findings</h2>
       
       <div className="space-y-6">
-        {findings.map((finding, index) => (
-          <div key={index} className="glass-dark rounded-lg p-4">
-            <h3 className="font-medium text-lg mb-2 flex items-center gap-2">
-              <span className={getSeverityColor(finding.severity)}>
-                {getIcon(finding.icon)}
-              </span>
-              <span>{finding.title}</span>
-            </h3>
-            <p className="text-muted-foreground mb-3">{finding.description}</p>
-            <div className="text-sm text-muted-foreground">
-              <span className={`${getSeverityColor(finding.severity)} font-medium`}>
-                Severity: {finding.severity}
-              </span> • Detected {finding.timespan.includes('throughout') ? 'throughout video' : `between ${finding.timespan}`}
+        {findings && findings.length > 0 ? (
+          findings.map((finding, index) => (
+            <div key={index} className="glass-dark rounded-lg p-4">
+              <h3 className="font-medium text-lg mb-2 flex items-center gap-2">
+                <span className={getSeverityColor(finding.severity)}>
+                  {getIcon(finding.icon)}
+                </span>
+                <span>{finding.title}</span>
+              </h3>
+              <p className="text-muted-foreground mb-3">{finding.description}</p>
+              <div className="text-sm text-muted-foreground">
+                <span className={`${getSeverityColor(finding.severity)} font-medium`}>
+                  Severity: {finding.severity}
+                </span> • Detected {finding.timespan && finding.timespan.includes('throughout') ? 'throughout video' : finding.timespan ? `between ${finding.timespan}` : 'in the video'}
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="glass-dark rounded-lg p-6 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-4 text-muted-foreground">
+              <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            <h3 className="text-lg font-medium mb-2">No Detailed Findings Available</h3>
+            <p className="text-muted-foreground">
+              The analysis didn't provide specific detailed findings for this video. 
+              This might happen with videos that have subtle manipulations or if the system 
+              determined a confidence score based on overall patterns rather than specific issues.
+            </p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

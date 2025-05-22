@@ -26,9 +26,10 @@ export default function AnalysisPage() {
   // Handle errors
   useEffect(() => {
     if (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       toast({ 
         title: "Error loading analysis",
-        description: "We couldn't retrieve this analysis. Please try again later.",
+        description: `We couldn't retrieve this analysis: ${errorMessage}`,
         variant: "destructive"
       });
     }
