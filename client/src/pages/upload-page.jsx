@@ -102,9 +102,11 @@ export default function UploadPage() {
         description: "Your video has been uploaded and is being analyzed",
       });
       
+      console.log("Upload response data:", data);
       // Redirect to analysis page after 1.5 seconds
       setTimeout(() => {
-        navigate(`/analysis/${data.id}`);
+        console.log("Redirecting to:", `/analysis/${data.videoId}`);
+        navigate(`/analysis/${data.videoId}`);
       }, 1500);
       
     } catch (error) {
