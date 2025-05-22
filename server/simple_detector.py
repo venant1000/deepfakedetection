@@ -140,8 +140,8 @@ def analyze_video(video_path):
             probabilities = torch.softmax(outputs, dim=1)
             deepfake_confidence = probabilities[0][1].item()  # Probability of being deepfake
             
-            # More conservative threshold to reduce false positives
-            is_deepfake_overall = deepfake_confidence > 0.6
+            # Even more conservative threshold to reduce false positives on real videos
+            is_deepfake_overall = deepfake_confidence > 0.7
         
         # Create frame-by-frame results for visualization
         frame_results = []
@@ -165,19 +165,20 @@ def analyze_video(video_path):
             conf = result["confidence"]
             pos = int((i / (len(frame_results) - 1)) * 100)  # Convert to position percentage
             
-            if conf > 0.7:
+            # Adjust thresholds to match our classification scheme
+            if conf > 0.75:
                 timeline.append({
                     "position": pos,
                     "tooltip": f"High deepfake probability: {conf:.1%}",
                     "type": "danger"
                 })
-            elif conf > 0.4:
+            elif conf > 0.6:
                 timeline.append({
                     "position": pos,
                     "tooltip": f"Moderate probability: {conf:.1%}",
                     "type": "warning"
                 })
-            elif conf > 0.2:
+            elif conf > 0.4:
                 timeline.append({
                     "position": pos,
                     "tooltip": f"Low deepfake probability: {conf:.1%}",
@@ -188,9 +189,10 @@ def analyze_video(video_path):
         findings = []
         
         # Calculate how many frames were above different thresholds
-        high_conf_frames = sum(1 for result in frame_results if result["confidence"] > 0.7)
-        medium_conf_frames = sum(1 for result in frame_results if 0.4 < result["confidence"] <= 0.7)
-        low_conf_frames = sum(1 for result in frame_results if 0.2 < result["confidence"] <= 0.4)
+        # Adjust thresholds to better distinguish real from fake videos
+        high_conf_frames = sum(1 for result in frame_results if result["confidence"] > 0.75)
+        medium_conf_frames = sum(1 for result in frame_results if 0.6 < result["confidence"] <= 0.75)
+        low_conf_frames = sum(1 for result in frame_results if 0.4 < result["confidence"] <= 0.6)
         
         # Add findings based on the analysis
         if high_conf_frames > 0:
