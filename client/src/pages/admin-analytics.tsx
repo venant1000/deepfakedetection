@@ -145,8 +145,8 @@ export default function AdminAnalytics() {
             </Card>
           </div>
           
-          {/* Analytics Dashboard */}
-          <AnalyticsDashboard />
+          {/* Analytics Dashboard with real-time data */}
+          <AnalyticsDashboard analyticsData={analyticsData} />
         </div>
       </div>
     </div>
