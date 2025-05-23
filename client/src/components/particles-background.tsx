@@ -10,8 +10,8 @@ export default function ParticlesBackground() {
     // Load tsParticles
     const loadParticles = async () => {
       try {
-        // Dynamically import tsParticles to avoid SSR issues
-        const tsParticles = (await import('tsparticles')).tsParticles;
+        // Dynamically import tsParticles-slim to avoid SSR issues
+        const { tsParticles } = await import('tsparticles-slim');
         
         await tsParticles.load("particles-container", {
           fpsLimit: 60,
@@ -48,13 +48,13 @@ export default function ParticlesBackground() {
             }
           },
           interactivity: {
-            detect_on: "canvas",
+            detectsOn: "canvas",
             events: {
-              onhover: {
+              onHover: {
                 enable: true,
                 mode: "grab"
               },
-              onclick: {
+              onClick: {
                 enable: true,
                 mode: "push"
               },
@@ -63,12 +63,12 @@ export default function ParticlesBackground() {
             modes: {
               grab: {
                 distance: 140,
-                line_linked: {
+                links: {
                   opacity: 0.8
                 }
               },
               push: {
-                particles_nb: 3
+                quantity: 3
               }
             }
           },
