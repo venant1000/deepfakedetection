@@ -190,8 +190,8 @@ def analyze_video(video_path):
         
         # Calculate average and maximum confidence from the frame-by-frame results
         frame_confidences = [result["confidence"] for result in frame_results]
-        avg_confidence = sum(frame_confidences) / len(frame_confidences)
-        max_confidence = max(frame_confidences)
+        avg_confidence = float(sum(frame_confidences) / len(frame_confidences))
+        max_confidence = float(max(frame_confidences))
         
         # Create timeline markers based on frame-by-frame analysis
         timeline = []
@@ -271,11 +271,11 @@ def analyze_video(video_path):
             })
         
         return {
-            "isDeepfake": is_deepfake_overall,
-            "confidence": avg_confidence,
-            "processingTime": len(frame_sequence) * 0.2,
-            "maxConfidence": max_confidence,
-            "framesAnalyzed": len(frame_sequence),
+            "isDeepfake": bool(is_deepfake_overall),
+            "confidence": float(avg_confidence),
+            "processingTime": float(len(frame_sequence) * 0.2),
+            "maxConfidence": float(max_confidence),
+            "framesAnalyzed": int(len(frame_sequence)),
             "issues": issues,
             "findings": findings,
             "timeline": timeline,
