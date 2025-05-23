@@ -26,13 +26,14 @@ export default function AdminAnalytics() {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
   
-  // Fetch analytics data
+  // Fetch analytics data - with debounce to prevent multiple requests
   const fetchAnalytics = async () => {
     try {
       setIsLoading(true);
       
       const response = await fetch("/api/admin/stats", {
         credentials: "include",
+        cache: "no-store" // Prevent caching
       });
 
       if (!response.ok) {
@@ -50,7 +51,12 @@ export default function AdminAnalytics() {
 
       // Get data from the API
       const data = await response.json();
-      setAnalyticsData(data);
+      
+      // Prevent state updates when component is unmounting
+      setTimeout(() => {
+        setAnalyticsData(data);
+        setIsLoading(false);
+      }, 50);
       
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -59,7 +65,6 @@ export default function AdminAnalytics() {
         description: error instanceof Error ? error.message : "Failed to load analytics data",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

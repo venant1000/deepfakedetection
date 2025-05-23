@@ -20,21 +20,37 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
   const [isLoading, setIsLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState("total");
   
+  // Use refs to track if component is mounted and prevent updates on unmounted components
+  const isMounted = useRef(true);
+  
   useEffect(() => {
-    // Initialize charts when the component mounts or data changes
+    // Set mounted flag
+    isMounted.current = true;
+    
+    // Only initialize charts if we have data
     if (analyticsData) {
-      setIsLoading(false);
-      // Cleanup previous chart instances before creating new ones
+      // Cleanup previous chart instances to prevent duplicates
       destroyCharts();
-      // Initialize charts with the new data
-      initializeCharts();
+      
+      // Add a small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        if (isMounted.current) {
+          setIsLoading(false);
+          initializeCharts();
+        }
+      }, 500);
+      
+      return () => {
+        clearTimeout(timer);
+      };
     }
-
-    // Cleanup charts when the component unmounts
+    
+    // Cleanup when unmounting
     return () => {
+      isMounted.current = false;
       destroyCharts();
     };
-  }, [analyticsData]);
+  }, [analyticsData]);  // Re-initialize when data changes
 
   const destroyCharts = () => {
     if (usageChartInstance.current) {
