@@ -20,8 +20,8 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
 
   return (
     <div className="glass rounded-xl p-6 mb-8">
-      <div className="grid grid-cols-1 gap-6">
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Analysis Summary</h2>
           
           {/* Status indicator - different for deepfake vs authentic */}
@@ -110,6 +110,31 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+        
+        <div className="glass-dark rounded-xl p-6 flex flex-col">
+          <h3 className="text-lg font-semibold mb-6 text-center">Confidence Score</h3>
+          
+          <div className="relative mx-auto h-44 w-44 mb-6">
+            <svg className="w-full h-full" viewBox="0 0 100 100">
+              <circle className="text-muted" strokeWidth="10" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50"/>
+              <circle 
+                className={`${analysis.isDeepfake ? 'text-[#ff3366]' : 'text-primary'} progress-ring`} 
+                strokeWidth="10" 
+                stroke="currentColor" 
+                fill="transparent" 
+                r="40" 
+                cx="50" 
+                cy="50" 
+                strokeDasharray="251.2" 
+                strokeDashoffset={(100 - (analysis.confidence * 100)) / 100 * 251.2}
+              />
+            </svg>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+              <div className="text-4xl font-bold">{Math.round(analysis.confidence * 100)}%</div>
+              <div className="text-sm text-muted-foreground">{analysis.isDeepfake ? "Deepfake" : "Authentic"}</div>
+            </div>
           </div>
         </div>
       </div>
