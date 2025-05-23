@@ -245,7 +245,115 @@ class DeepfakeAnalyzer:
         # This reduces noise while maintaining important edge details
         smoothed = cv2.bilateralFilter(sharpened, 9, 75, 75)
         
-        # Step 5: Equalize histogram in RGB channels to improve contrast
+        # Step 5: Apply texture analysis on important facial regions
+        # Convert back to grayscale for texture analysis
+        gray_smoothed = cv2.cvtColor(smoothed, cv2.COLOR_RGB2GRAY)
+        
+        # Find faces to apply targeted enhancements
+        # Find faces for targeted analysis - deepfakes often affect facial regions
+        # Use a more robust approach that doesn't depend on specific file paths
+        faces = []
+        try:
+            # Try several common locations for the Haar cascade file
+            cascade_locations = [
+                'haarcascade_frontalface_default.xml',
+                '/usr/local/share/opencv4/haarcascades/haarcascade_frontalface_default.xml',
+                '/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml',
+                '/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml'
+            ]
+            
+            face_cascade = None
+            for cascade_path in cascade_locations:
+                try:
+                    face_cascade = cv2.CascadeClassifier(cascade_path)
+                    if not face_cascade.empty():
+                        break
+                except:
+                    continue
+            
+            # If we found a valid cascade classifier, detect faces
+            if face_cascade and not face_cascade.empty():
+                faces = face_cascade.detectMultiScale(gray_smoothed, 1.3, 5)
+            else:
+                # Simple fallback face detection using edge detection and contours
+                edges = cv2.Canny(gray_smoothed, 100, 200)
+                contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                # Find contours that might be faces (roughly square/rectangular)
+                for contour in contours:
+                    if cv2.contourArea(contour) > gray_smoothed.shape[0] * gray_smoothed.shape[1] * 0.03:
+                        x, y, w, h = cv2.boundingRect(contour)
+                        aspect_ratio = float(w) / h
+                        # Face-like aspect ratio
+                        if 0.5 < aspect_ratio < 1.5:
+                            faces.append((x, y, w, h))
+        except Exception as e:
+            print(f"Face detection error (using fallback): {e}")
+            # Use a basic approximation - center region of the image might contain a face
+            h, w = gray_smoothed.shape
+            center_x, center_y = w // 4, h // 4
+            center_w, center_h = w // 2, h // 2
+            faces = [(center_x, center_y, center_w, center_h)]
+        
+        # Apply facial region specific enhancements if faces are detected
+        for (x, y, w, h) in faces:
+            # Focus enhancement on facial regions where deepfakes are most noticeable
+            face_roi = smoothed[y:y+h, x:x+w].copy()
+            
+            # Apply texture-aware adjustments to facial regions
+            # Focus particularly on eyes and mouth where artifacts are common
+            eye_y = y + int(h * 0.3)
+            mouth_y = y + int(h * 0.7)
+            
+            # Ensure regions are within image bounds
+            eye_height = min(int(h*0.2), smoothed.shape[0] - eye_y)
+            mouth_height = min(int(h*0.2), smoothed.shape[0] - mouth_y)
+            region_width = min(w, smoothed.shape[1] - x)
+            
+            # Only process if the regions are valid
+            if eye_height > 0 and region_width > 0:
+                eye_region = smoothed[eye_y:eye_y+eye_height, x:x+region_width].copy()
+                # Apply targeted sharpening to eyes areas
+                eye_kernel = np.array([[-0.5,-0.5,-0.5], [-0.5,5,-0.5], [-0.5,-0.5,-0.5]])
+                eye_region = cv2.filter2D(eye_region, -1, eye_kernel)
+                # Apply the enhanced regions back to the image
+                smoothed[eye_y:eye_y+eye_height, x:x+region_width] = eye_region
+            
+            if mouth_height > 0 and region_width > 0:
+                mouth_region = smoothed[mouth_y:mouth_y+mouth_height, x:x+region_width].copy()
+                # Apply targeted sharpening to mouth areas
+                mouth_kernel = np.array([[-0.5,-0.5,-0.5], [-0.5,5,-0.5], [-0.5,-0.5,-0.5]])
+                mouth_region = cv2.filter2D(mouth_region, -1, mouth_kernel)
+                # Apply the enhanced regions back to the image
+                smoothed[mouth_y:mouth_y+mouth_height, x:x+region_width] = mouth_region
+        
+        # Step 6: Apply frequency domain analysis - check for telltale GAN artifacts
+        # Simplified FFT analysis - often more reliable than pixel-level analysis for AI-generated content
+        try:
+            # Convert to floating point for FFT
+            gray_float = gray_smoothed.astype(np.float32)
+            # Compute the 2D FFT
+            dft_complex = np.fft.fft2(gray_float)
+            dft_shifted = np.fft.fftshift(dft_complex)
+            # Compute magnitude spectrum
+            magnitude = np.abs(dft_shifted)
+            # Apply log transform to better visualize
+            magnitude = 20 * np.log(magnitude + 1)
+            
+            # Analyze magnitude spectrum for unusual frequency patterns
+            # Common in deepfakes due to generator architecture
+            mean_magnitude = float(np.mean(magnitude))
+            std_magnitude = float(np.std(magnitude))
+            frequency_suspicion = 0.0
+            
+            # Simplified detection of frequency artifacts
+            if mean_magnitude > 60 or std_magnitude < 10:
+                frequency_suspicion = 0.2
+        except:
+            # If FFT analysis fails, skip it
+            frequency_suspicion = 0.0
+        
+        # Step 7: Equalize histogram in RGB channels to improve contrast
         # Split the image into the three color channels
         r, g, b = cv2.split(smoothed)
         # Apply histogram equalization to each channel
@@ -255,7 +363,7 @@ class DeepfakeAnalyzer:
         # Merge the equalized channels
         balanced = cv2.merge((r_eq, g_eq, b_eq))
         
-        # Step 6: Apply a small amount of Gaussian blur to reduce artifacts introduced by previous steps
+        # Step 8: Apply a small amount of Gaussian blur to reduce artifacts introduced by previous steps
         final_enhanced = cv2.GaussianBlur(balanced, (3, 3), 0)
         
         # Dynamically adjust quality factor based on blur score and other image properties
@@ -269,13 +377,72 @@ class DeepfakeAnalyzer:
         
         # Additional adjustment based on brightness uniformity
         # Deepfakes sometimes have unusual lighting patterns
-        brightness = np.mean(gray)
-        brightness_std = np.std(gray)
+        brightness = float(np.mean(gray))
+        brightness_std = float(np.std(gray))
         brightness_uniformity = brightness_std / brightness if brightness > 0 else 0
         
         # If brightness is too uniform or non-uniform, it might be suspicious
         if brightness_uniformity < 0.1 or brightness_uniformity > 0.5:
             quality_factor *= 0.9
+        
+        # Adjust quality factor based on frequency domain analysis
+        quality_factor *= (1 - frequency_suspicion)
+        
+        # Check color consistency between face and rest of image
+        # Deepfakes often have color tone mismatches
+        if len(faces) > 0:
+            for (x, y, w, h) in faces:
+                # Ensure face region is within image bounds
+                x_end = min(x+w, frame.shape[1])
+                y_end = min(y+h, frame.shape[0])
+                
+                if x < x_end and y < y_end:
+                    face_region = frame[y:y_end, x:x_end]
+                    
+                    # Create a mask for non-face regions
+                    mask = np.ones(frame.shape[:2], dtype=np.uint8) * 255
+                    mask[y:y_end, x:x_end] = 0
+                    
+                    if face_region.size > 0 and np.sum(mask) > 0:
+                        # Convert face to HSV for color analysis
+                        face_hsv = cv2.cvtColor(face_region, cv2.COLOR_RGB2HSV)
+                        face_h, face_s, face_v = cv2.split(face_hsv)
+                        
+                        # Get average hue and saturation of face
+                        avg_face_h = float(np.mean(face_h))
+                        avg_face_s = float(np.mean(face_s))
+                        
+                        # Sample some random points from non-face regions for comparison
+                        non_face_h_values = []
+                        non_face_s_values = []
+                        
+                        # Use a simpler approach to randomly sample non-face regions
+                        for _ in range(20):
+                            # Get random coordinates
+                            rand_y = np.random.randint(0, frame.shape[0])
+                            rand_x = np.random.randint(0, frame.shape[1])
+                            
+                            # Check if point is outside face region
+                            if rand_y < y or rand_y >= y_end or rand_x < x or rand_x >= x_end:
+                                # Get the pixel value
+                                pixel = frame[rand_y, rand_x]
+                                # Convert to HSV
+                                pixel_hsv = cv2.cvtColor(np.array([[pixel]]), cv2.COLOR_RGB2HSV)
+                                non_face_h_values.append(pixel_hsv[0, 0, 0])
+                                non_face_s_values.append(pixel_hsv[0, 0, 1])
+                        
+                        # Calculate average non-face hue and saturation
+                        if non_face_h_values and non_face_s_values:
+                            avg_non_face_h = float(np.mean(non_face_h_values))
+                            avg_non_face_s = float(np.mean(non_face_s_values))
+                            
+                            # Check for significant color differences
+                            h_diff = abs(avg_face_h - avg_non_face_h)
+                            s_diff = abs(avg_face_s - avg_non_face_s)
+                            
+                            if h_diff > 15 or s_diff > 30:
+                                # Color inconsistency detected - common in deepfakes
+                                quality_factor *= 0.85
             
         return final_enhanced, quality_factor
     
@@ -286,7 +453,16 @@ class DeepfakeAnalyzer:
         
         # Convert to PIL image for the model
         pil_frame = Image.fromarray(enhanced_frame)
-        input_tensor = self.transform(pil_frame).unsqueeze(0).to(self.device)
+        
+        # Apply transformations to convert to tensor
+        tensor = self.transform(pil_frame)
+        
+        # Add batch dimension correctly - first convert to numpy, then back to tensor with batch dim
+        tensor_np = tensor.numpy()
+        # Expand dimensions to add batch (first dimension)
+        batch_tensor_np = np.expand_dims(tensor_np, axis=0)
+        # Convert back to PyTorch tensor
+        input_tensor = torch.from_numpy(batch_tensor_np).to(self.device)
         
         with torch.no_grad():
             outputs = self.model(input_tensor)
