@@ -79,8 +79,8 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
             datasets: [{
               label: 'Videos Analyzed',
               data: uploadCounts,
-              borderColor: 'hsl(var(--primary))',
-              backgroundColor: 'hsla(var(--primary), 0.1)',
+              borderColor: 'hsl(210, 84%, 60%)',
+              backgroundColor: 'hsla(210, 84%, 60%, 0.1)',
               tension: 0.3,
               fill: true
             }]
@@ -107,10 +107,10 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
               tooltip: {
                 mode: 'index',
                 intersect: false,
-                backgroundColor: 'rgba(10, 10, 10, 0.8)',
+                backgroundColor: 'rgba(72, 85, 150, 0.9)',
                 titleColor: 'white',
                 bodyColor: 'white',
-                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderColor: 'rgba(123, 97, 255, 0.3)',
                 borderWidth: 1
               }
             },
@@ -154,8 +154,8 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
             datasets: [{
               data: [authentic, deepfake],
               backgroundColor: [
-                'hsl(var(--primary))',
-                'hsl(350, 100%, 60%)'
+                'hsl(160, 84%, 39%)',
+                'hsl(350, 84%, 60%)'
               ],
               borderWidth: 2,
               borderColor: 'rgba(10, 10, 10, 0.05)'
@@ -215,7 +215,7 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
             datasets: [{
               label: 'Processing Time Distribution',
               data: counts,
-              backgroundColor: 'hsla(var(--primary), 0.7)',
+              backgroundColor: 'hsla(250, 84%, 60%, 0.7)',
               borderRadius: 6
             }]
           },
