@@ -196,10 +196,15 @@ def analyze_video(video_path):
         # Create timeline markers based on frame-by-frame analysis
         timeline = []
         
-        # Create markers at different positions in the video based on individual frame analysis
-        for i, result in enumerate(frame_results):
+        # Create only 5 strategic markers at key positions (0%, 25%, 50%, 75%, 100%)
+        marker_positions = [0, 0.25, 0.5, 0.75, 1.0]
+        
+        for pos_ratio in marker_positions:
+            # Find the closest frame index for this position
+            frame_index = int(pos_ratio * (len(frame_results) - 1))
+            result = frame_results[frame_index]
             conf = result["confidence"]
-            pos = int((i / (len(frame_results) - 1)) * 100)  # Convert to position percentage
+            pos = int(pos_ratio * 100)  # Convert to position percentage
             
             # Adjust thresholds to match our classification scheme
             # Higher confidence value means lower deepfake probability in our system
