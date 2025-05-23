@@ -1,82 +1,38 @@
-import { useCallback } from "react";
-import Particles from "@tsparticles/react";
-import { Engine } from "@tsparticles/engine";
-import { loadSlim } from "@tsparticles/slim";
+import React from "react";
 
 export default function ParticlesBackground() {
-  const particlesInit = useCallback(async (engine: Engine) => {
-    // Initialize the tsParticles instance
-    await loadSlim(engine);
-  }, []);
-
+  // Create a simpler background that won't cause errors
   return (
-    <Particles
-      id="particles-background"
-      className="absolute top-0 left-0 w-full h-full z-[-1]"
-      init={particlesInit}
-      options={{
-        background: {
-          color: {
-            value: "transparent",
-          },
-        },
-        fpsLimit: 60,
-        particles: {
-          color: {
-            value: ["#00ff88", "#7000ff", "#0088ff"]
-          },
-          number: {
-            value: 50,
-            density: {
-              enable: true,
-              value_area: 800
-            }
-          },
-          opacity: {
-            value: 0.5,
-            random: true
-          },
-          size: {
-            value: 3,
-            random: true
-          },
-          move: {
-            enable: true,
-            speed: 1,
-            direction: "none",
-            random: true,
-            straight: false,
-            outModes: "out",
-            bounce: false
-          }
-        },
-        interactivity: {
-          detectsOn: "canvas",
-          events: {
-            onHover: {
-              enable: true,
-              mode: "grab"
-            },
-            onClick: {
-              enable: true,
-              mode: "push"
-            },
-            resize: true
-          },
-          modes: {
-            grab: {
-              distance: 140,
-              links: {
-                opacity: 0.8
-              }
-            },
-            push: {
-              quantity: 3
-            }
-          }
-        },
-        detectRetina: true
+    <div 
+      className="absolute top-0 left-0 w-full h-full z-[-1] overflow-hidden"
+      style={{ 
+        background: "linear-gradient(135deg, rgba(0,30,60,0.6) 0%, rgba(0,10,30,0.8) 100%)"
       }}
-    />
+    >
+      {/* Static dots for decoration */}
+      {Array.from({ length: 30 }).map((_, i) => {
+        // Pre-calculate these to avoid React warning about hooks
+        const dotSize = 2 + Math.floor(i % 4);
+        const topPos = `${Math.floor(i * 3.33) % 100}%`;
+        const leftPos = `${Math.floor(i * 7.77) % 100}%`;
+        const opacityVal = 0.2 + ((i % 5) / 10);
+        
+        return (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              backgroundColor: i % 3 === 0 ? "#00ff88" : i % 3 === 1 ? "#7000ff" : "#0088ff",
+              width: `${dotSize}px`,
+              height: `${dotSize}px`,
+              top: topPos,
+              left: leftPos,
+              opacity: opacityVal,
+              transform: `translate(${(i % 7) * 10}px, ${(i % 5) * 10}px)`,
+            }}
+          />
+        );
+      })}
+    </div>
   );
 }
