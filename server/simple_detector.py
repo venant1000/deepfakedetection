@@ -216,19 +216,19 @@ def analyze_video(video_path):
             if conf < 0.5:
                 timeline.append({
                     "position": pos,
-                    "tooltip": f"High deepfake probability: {(1-conf):.1%} at {target_timestamp:.1f}s",
+                    "tooltip": f"High deepfake probability: {(1-conf):.1%}",
                     "type": "danger"
                 })
             elif conf < 0.7:
                 timeline.append({
                     "position": pos,
-                    "tooltip": f"Moderate probability: {(1-conf):.1%} at {target_timestamp:.1f}s",
+                    "tooltip": f"Moderate probability: {(1-conf):.1%}",
                     "type": "warning"
                 })
             else:
                 timeline.append({
                     "position": pos,
-                    "tooltip": f"Low deepfake probability: {(1-conf):.1%} at {target_timestamp:.1f}s",
+                    "tooltip": f"Low deepfake probability: {(1-conf):.1%}",
                     "type": "normal"
                 })
         
