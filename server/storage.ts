@@ -187,6 +187,10 @@ export class MemStorage implements IStorage {
     return newLog;
   }
   
+  async clearSystemLogs(): Promise<void> {
+    this.systemLogs.clear();
+  }
+  
   async clearVideoCache(): Promise<{ deletedCount: number, totalSize: number }> {
     // Calculate approximate size before clearing (15MB per video is a rough estimate)
     const videoCount = this.videoAnalyses.size;
