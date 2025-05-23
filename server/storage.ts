@@ -7,6 +7,7 @@ import {
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { randomBytes, createHash } from "crypto";
+import fs from "fs";
 
 const MemoryStore = createMemoryStore(session);
 

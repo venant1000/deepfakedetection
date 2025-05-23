@@ -3,6 +3,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Card,
   CardContent,
@@ -31,6 +33,7 @@ export default function AdminSettingsPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCacheClearing, setIsCacheClearing] = useState(false);
   
   // Mock settings - would be replaced with actual API data
   const [generalSettings, setGeneralSettings] = useState({
@@ -134,6 +137,7 @@ export default function AdminSettingsPage() {
             <TabsTrigger value="api">API & Performance</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="cache">Cache Management</TabsTrigger>
           </TabsList>
           
           {/* General Settings Tab */}
@@ -626,6 +630,145 @@ export default function AdminSettingsPage() {
                   <Button variant="default">
                     Run Security Scan
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Cache Management Tab */}
+          <TabsContent value="cache">
+            <Card>
+              <CardHeader>
+                <CardTitle>Cache Management</CardTitle>
+                <CardDescription>
+                  Control system cache and optimize memory usage
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Cache Info Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Video Cache Statistics</h3>
+                  
+                  {/* Video Cache Statistics */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="bg-muted/50">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">{user?.videoCount || 0}</div>
+                          <p className="text-sm text-muted-foreground">Videos Cached</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-muted/50">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">{(user?.videoCount || 0) * 15} MB</div>
+                          <p className="text-sm text-muted-foreground">Estimated Cache Size</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-muted/50">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">Never</div>
+                          <p className="text-sm text-muted-foreground">Last Cache Clear</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+                
+                <Separator className="my-4" />
+                
+                {/* Cache Management Controls */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Cache Management Controls</h3>
+                  
+                  <div className="p-4 border border-destructive/20 rounded-md bg-destructive/5">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <h4 className="font-medium text-destructive">Clear Video Cache</h4>
+                        <p className="text-sm text-muted-foreground">
+                          This will remove all cached video files and analysis results from memory.
+                          Use this when the system is using too much memory or you want to free up space.
+                        </p>
+                      </div>
+                      
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => {
+                          if (confirm("Are you sure you want to clear the video cache? This action cannot be undone.")) {
+                            setIsCacheClearing(true);
+                            
+                            // Call the API to clear cache
+                            fetch('/api/admin/clear-cache', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                              setIsCacheClearing(false);
+                              if (data.success) {
+                                toast({
+                                  title: "Cache Cleared",
+                                  description: data.message || "Video cache has been successfully cleared.",
+                                });
+                              } else {
+                                throw new Error(data.error || "Failed to clear cache");
+                              }
+                            })
+                            .catch(error => {
+                              setIsCacheClearing(false);
+                              toast({
+                                title: "Error",
+                                description: error.message || "Failed to clear video cache.",
+                                variant: "destructive",
+                              });
+                            });
+                          }
+                        }}
+                        disabled={isCacheClearing}
+                      >
+                        {isCacheClearing ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Clearing Cache...
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                              <path d="M3 6h18"></path>
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                              <line x1="10" y1="11" x2="10" y2="17"></line>
+                              <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                            Clear Video Cache
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 border rounded-md bg-muted/50">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Automatic Cache Management</h4>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="autoCacheClean">Enable Automatic Cache Cleanup</Label>
+                          <p className="text-sm text-muted-foreground">System will automatically clear old cache entries</p>
+                        </div>
+                        <Switch id="autoCacheClean" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
