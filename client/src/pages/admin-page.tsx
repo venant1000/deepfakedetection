@@ -121,92 +121,20 @@ export default function AdminPage() {
           ))}
         </div>
         
-        {/* Quick Overview Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest actions on the platform</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-4 py-2 border-b border-muted last:border-0">
-                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">User registered</p>
-                      <p className="text-xs text-muted-foreground">
-                        New user account created
-                      </p>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {i === 1 ? '5 min ago' : i === 2 ? '1 hour ago' : i === 3 ? '3 hours ago' : '1 day ago'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>System Status</CardTitle>
-              <CardDescription>Current system performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">CPU Usage</span>
-                    <span className="text-sm text-muted-foreground">24%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2.5">
-                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '24%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Memory Usage</span>
-                    <span className="text-sm text-muted-foreground">62%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2.5">
-                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '62%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Storage</span>
-                    <span className="text-sm text-muted-foreground">47%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2.5">
-                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '47%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">API Requests</span>
-                    <span className="text-sm text-muted-foreground">78%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2.5">
-                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '78%' }}></div>
-                  </div>
-                </div>
-                
-                <div className="pt-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                    <span className="text-sm">All systems operational</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Quick help text */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Admin Dashboard</CardTitle>
+            <CardDescription>Use the controls above to manage your DeepGuardAI system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              The DeepGuardAI admin dashboard provides you with advanced tools for managing users, 
+              reviewing analytics, monitoring system logs, and configuring system settings. Click on any
+              of the control panels above to access these features.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
