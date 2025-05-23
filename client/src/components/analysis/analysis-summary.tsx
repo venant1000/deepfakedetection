@@ -17,59 +17,11 @@ interface AnalysisSummaryProps {
 }
 
 export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
-  // Generate metrics from findings for the progress bars
-  const getMetrics = () => {
-    const metrics = [
-      { name: "Facial Inconsistency", value: 0 },
-      { name: "Visual Artifacts", value: 0 }
-    ];
-    
-    // If we have findings, calculate metrics based on them
-    if (analysis.findings && analysis.findings.length > 0) {
-      analysis.findings.forEach(finding => {
-        if (finding.title.includes("Facial") || finding.description.includes("facial")) {
-          metrics[0].value = finding.severity === "high" ? 85 + Math.floor(Math.random() * 10) : 
-                             finding.severity === "medium" ? 70 + Math.floor(Math.random() * 15) : 
-                             50 + Math.floor(Math.random() * 20);
-        } 
-        else if (finding.description.includes("lighting") || finding.description.includes("shadow") || 
-                finding.title.includes("Lighting") || finding.title.includes("Inconsistenc")) {
-          metrics[1].value = finding.severity === "high" ? 85 + Math.floor(Math.random() * 10) : 
-                             finding.severity === "medium" ? 70 + Math.floor(Math.random() * 15) : 
-                             50 + Math.floor(Math.random() * 20);
-        }
-      });
-    } 
-    
-    // Ensure we have values for both metrics
-    if (metrics[0].value === 0 || metrics[1].value === 0) {
-      // Generate random values based on the overall confidence
-      const baseValue = analysis.isDeepfake ? analysis.confidence : 100 - analysis.confidence;
-      
-      // Random value close to confidence but with some variation
-      const getRandomValue = () => {
-        return Math.min(99, baseValue + Math.floor(Math.random() * 15) - 7);
-      };
-      
-      // Set any missing values
-      if (metrics[0].value === 0) {
-        metrics[0].value = getRandomValue();
-      }
-      
-      if (metrics[1].value === 0) {
-        metrics[1].value = getRandomValue();
-      }
-    }
-    
-    return metrics;
-  };
-  
-  const metrics = getMetrics();
 
   return (
     <div className="glass rounded-xl p-6 mb-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6">
+        <div>
           <h2 className="text-xl font-semibold mb-4">Analysis Summary</h2>
           
           {/* Status indicator - different for deepfake vs authentic */}
@@ -158,52 +110,6 @@ export default function AnalysisSummary({ analysis }: AnalysisSummaryProps) {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-        
-        <div className="glass-dark rounded-xl p-6 flex flex-col">
-          <h3 className="text-lg font-semibold mb-6 text-center">Confidence Score</h3>
-          
-          <div className="relative mx-auto h-44 w-44 mb-6">
-            <svg className="w-full h-full" viewBox="0 0 100 100">
-              <circle className="text-muted" strokeWidth="10" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50"/>
-              <circle 
-                className={`${analysis.isDeepfake ? 'text-[#ff3366]' : 'text-primary'} progress-ring`} 
-                strokeWidth="10" 
-                stroke="currentColor" 
-                fill="transparent" 
-                r="40" 
-                cx="50" 
-                cy="50" 
-                strokeDasharray="251.2" 
-                strokeDashoffset={(100 - (analysis.confidence * 100)) / 100 * 251.2}
-              />
-            </svg>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-              <div className="text-4xl font-bold">{Math.round(analysis.confidence * 100)}%</div>
-              <div className="text-sm text-muted-foreground">{analysis.isDeepfake ? "Deepfake" : "Authentic"}</div>
-            </div>
-          </div>
-          
-          <div className="space-y-4 mt-auto">
-            {metrics.map((metric, index) => (
-              <div key={index}>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm">{metric.name}</span>
-                  <span className="text-sm font-semibold">{metric.value}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-muted">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      metric.value > 80 ? 'bg-[#ff3366]' : 
-                      metric.value > 60 ? 'bg-[#ffbb00]' : 
-                      'bg-primary'
-                    }`} 
-                    style={{ width: `${metric.value}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
