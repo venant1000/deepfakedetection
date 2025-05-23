@@ -1,0 +1,464 @@
+import { useEffect, useRef, useState } from "react";
+import Chart from "chart.js/auto";
+import { Loader2 } from "lucide-react";
+
+interface AnalyticsDashboardProps {
+  analyticsData?: any;
+}
+
+export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboardProps) {
+  const usageChartRef = useRef<HTMLCanvasElement | null>(null);
+  const detectionChartRef = useRef<HTMLCanvasElement | null>(null);
+  const performanceChartRef = useRef<HTMLCanvasElement | null>(null);
+  const trendsChartRef = useRef<HTMLCanvasElement | null>(null);
+  
+  const usageChartInstance = useRef<Chart | null>(null);
+  const detectionChartInstance = useRef<Chart | null>(null);
+  const performanceChartInstance = useRef<Chart | null>(null);
+  const trendsChartInstance = useRef<Chart | null>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeMetric, setActiveMetric] = useState("total");
+  
+  useEffect(() => {
+    // Initialize charts when the component mounts or data changes
+    if (analyticsData) {
+      setIsLoading(false);
+      // Cleanup previous chart instances before creating new ones
+      destroyCharts();
+      // Initialize charts with the new data
+      initializeCharts();
+    }
+
+    // Cleanup charts when the component unmounts
+    return () => {
+      destroyCharts();
+    };
+  }, [analyticsData]);
+
+  const destroyCharts = () => {
+    if (usageChartInstance.current) {
+      usageChartInstance.current.destroy();
+      usageChartInstance.current = null;
+    }
+    if (detectionChartInstance.current) {
+      detectionChartInstance.current.destroy();
+      detectionChartInstance.current = null;
+    }
+    if (performanceChartInstance.current) {
+      performanceChartInstance.current.destroy();
+      performanceChartInstance.current = null;
+    }
+    if (trendsChartInstance.current) {
+      trendsChartInstance.current.destroy();
+      trendsChartInstance.current = null;
+    }
+  };
+
+  const initializeCharts = () => {
+    if (!analyticsData) return;
+
+    // Prepare data for usage chart (daily uploads)
+    if (usageChartRef.current) {
+      const ctx = usageChartRef.current.getContext('2d');
+      if (ctx) {
+        const dailyUploads = analyticsData.dailyUploads || [];
+        const labels = dailyUploads.map((item: any) => item.date);
+        const uploadCounts = dailyUploads.map((item: any) => item.count);
+
+        usageChartInstance.current = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Videos Analyzed',
+              data: uploadCounts,
+              borderColor: 'hsl(var(--primary))',
+              backgroundColor: 'hsla(var(--primary), 0.1)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false,
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 20,
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  font: {
+                    size: 12
+                  }
+                }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(10, 10, 10, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)'
+                }
+              },
+              x: {
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)'
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Prepare detection results chart
+    if (detectionChartRef.current) {
+      const ctx = detectionChartRef.current.getContext('2d');
+      if (ctx) {
+        const authentic = analyticsData.summary.videoCount - analyticsData.summary.deepfakeCount || 0;
+        const deepfake = analyticsData.summary.deepfakeCount || 0;
+        
+        detectionChartInstance.current = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Authentic', 'Deepfake'],
+            datasets: [{
+              data: [authentic, deepfake],
+              backgroundColor: [
+                'hsl(var(--primary))',
+                'hsl(350, 100%, 60%)'
+              ],
+              borderWidth: 2,
+              borderColor: 'rgba(10, 10, 10, 0.05)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  padding: 20,
+                  font: {
+                    size: 12
+                  },
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(10, 10, 10, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1
+              }
+            },
+            cutout: '70%',
+            animation: {
+              animateScale: true,
+              animateRotate: true
+            }
+          }
+        });
+      }
+    }
+
+    // Prepare system performance chart (processing times)
+    if (performanceChartRef.current) {
+      const ctx = performanceChartRef.current.getContext('2d');
+      if (ctx) {
+        const processingTimes = analyticsData.processingTimes || [];
+        const timeRanges = processingTimes.map((item: any) => item.timeRange);
+        const counts = processingTimes.map((item: any) => item.count);
+
+        performanceChartInstance.current = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: timeRanges,
+            datasets: [{
+              label: 'Processing Time Distribution',
+              data: counts,
+              backgroundColor: 'hsla(var(--primary), 0.7)',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(10, 10, 10, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)'
+                }
+              }
+            },
+            animation: {
+              delay: (context) => context.dataIndex * 100
+            }
+          }
+        });
+      }
+    }
+
+    // Prepare detection rates trend chart
+    if (trendsChartRef.current) {
+      const ctx = trendsChartRef.current.getContext('2d');
+      if (ctx) {
+        const detectionRates = analyticsData.detectionRates || [];
+        const dates = detectionRates.map((item: any) => item.date);
+        const rates = detectionRates.map((item: any) => item.rate);
+
+        trendsChartInstance.current = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Detection Rate',
+              data: rates,
+              borderColor: 'hsl(var(--primary))',
+              backgroundColor: 'transparent',
+              tension: 0.4,
+              borderWidth: 3,
+              pointBackgroundColor: 'hsl(var(--primary))',
+              pointRadius: 4,
+              pointHoverRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(10, 10, 10, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                callbacks: {
+                  label: function(context) {
+                    return `Rate: ${context.raw}%`;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  callback: function(value) {
+                    return value + '%';
+                  }
+                }
+              },
+              x: {
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)'
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+  };
+
+  // Calculate metrics from real data
+  const videoCount = analyticsData?.summary?.videoCount || 0;
+  const deepfakeCount = analyticsData?.summary?.deepfakeCount || 0;
+  const systemHealth = analyticsData?.summary?.systemHealth || 0;
+  
+  // Get processing time average if available
+  const processingTimes = analyticsData?.processingTimes || [];
+  const hasProcessingData = processingTimes.length > 0 && processingTimes.some((pt: any) => pt.count > 0);
+
+  const metricStats = {
+    total: { 
+      value: videoCount,
+      change: "+100%" // This would be calculated based on previous period in a real app
+    },
+    deepfakes: { 
+      value: deepfakeCount,
+
+      change: deepfakeCount > 0 ? "+100%" : "0%" 
+    },
+    avgTime: { 
+      value: hasProcessingData ? "~1m" : "N/A",
+      change: "0%" 
+    },
+    accuracy: { 
+      value: `${systemHealth}%`,
+      change: "+0%" 
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 min-h-[400px] items-center justify-center">
+        <div className="glass rounded-xl p-10 text-center col-span-full">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading analytics data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 mb-8">
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div 
+          className={`glass rounded-lg p-5 cursor-pointer transition-all ${activeMetric === 'total' ? 'ring-2 ring-primary/50' : 'hover:bg-muted/30'}`}
+          onClick={() => setActiveMetric('total')}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <div className="text-sm text-muted-foreground">Total Videos</div>
+            <div className={`text-xs px-2 py-1 rounded-full ${metricStats.total.change.startsWith('+') ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+              {metricStats.total.change}
+            </div>
+          </div>
+          <div className="text-3xl font-bold">{metricStats.total.value.toLocaleString()}</div>
+        </div>
+        
+        <div 
+          className={`glass rounded-lg p-5 cursor-pointer transition-all ${activeMetric === 'deepfakes' ? 'ring-2 ring-primary/50' : 'hover:bg-muted/30'}`}
+          onClick={() => setActiveMetric('deepfakes')}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <div className="text-sm text-muted-foreground">Deepfakes</div>
+            <div className={`text-xs px-2 py-1 rounded-full ${metricStats.deepfakes.change.startsWith('+') ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+              {metricStats.deepfakes.change}
+            </div>
+          </div>
+          <div className="text-3xl font-bold">{metricStats.deepfakes.value}</div>
+        </div>
+        
+        <div 
+          className={`glass rounded-lg p-5 cursor-pointer transition-all ${activeMetric === 'avgTime' ? 'ring-2 ring-primary/50' : 'hover:bg-muted/30'}`}
+          onClick={() => setActiveMetric('avgTime')}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <div className="text-sm text-muted-foreground">Avg. Processing</div>
+            <div className={`text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-400`}>
+              {metricStats.avgTime.change}
+            </div>
+          </div>
+          <div className="text-3xl font-bold">{metricStats.avgTime.value}</div>
+        </div>
+        
+        <div 
+          className={`glass rounded-lg p-5 cursor-pointer transition-all ${activeMetric === 'accuracy' ? 'ring-2 ring-primary/50' : 'hover:bg-muted/30'}`}
+          onClick={() => setActiveMetric('accuracy')}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <div className="text-sm text-muted-foreground">System Health</div>
+            <div className={`text-xs px-2 py-1 rounded-full ${metricStats.accuracy.change.startsWith('+') ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+              {metricStats.accuracy.change}
+            </div>
+          </div>
+          <div className="text-3xl font-bold">{metricStats.accuracy.value}</div>
+        </div>
+      </div>
+      
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Usage Overview */}
+        <div className="glass rounded-xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Daily Upload Activity</h2>
+          <div className="h-64">
+            <canvas ref={usageChartRef}></canvas>
+          </div>
+        </div>
+        
+        {/* Deepfake Ratio */}
+        <div className="glass rounded-xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Detection Results</h2>
+          <div className="h-64 flex items-center justify-center">
+            <canvas ref={detectionChartRef}></canvas>
+          </div>
+          <div className="flex justify-center mt-2 text-sm text-muted-foreground">
+            <div className="flex items-center mr-4">
+              <div className="w-3 h-3 rounded-full bg-primary mr-2"></div>
+              <span>Authentic: {videoCount - deepfakeCount}</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: 'hsl(350, 100%, 60%)'}}></div>
+              <span>Deepfake: {deepfakeCount}</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Processing Time Distribution */}
+        <div className="glass rounded-xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Processing Time Distribution</h2>
+          <div className="h-64">
+            <canvas ref={performanceChartRef}></canvas>
+          </div>
+        </div>
+        
+        {/* Detection Rate Trends */}
+        <div className="glass rounded-xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Detection Rate Trends</h2>
+          <div className="h-64">
+            <canvas ref={trendsChartRef}></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

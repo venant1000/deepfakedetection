@@ -12,7 +12,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import AnalyticsDashboard from "@/components/admin/analytics-dashboard";
+import AnalyticsDashboard from "@/components/admin/analytics-dashboard-live";
 
 export default function AdminAnalytics() {
   const { user } = useAuth();
