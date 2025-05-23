@@ -538,9 +538,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Register both endpoints to support the transition
+  // Admin stats endpoint
   app.get("/api/admin/stats", adminStatsHandler);
-  app.get("/api/admin/analytics", adminStatsHandler);
   
   app.get("/api/admin/users", async (req, res) => {
     try {
