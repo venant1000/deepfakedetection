@@ -5,6 +5,9 @@ import Sidebar from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Download, ArrowUpRight, RefreshCw, Calendar, ChevronDown, Zap, AlertTriangle, HelpCircle, FileText, PieChart as PieChartIcon, Activity, Clock, Filter } from "lucide-react";
+import DeepfakeCharts from "@/components/admin/deepfake-charts";
+import SystemHealthCharts from "@/components/admin/system-health-charts";
+import ModelPerformanceCharts from "@/components/admin/model-performance-charts";
 import {
   Select,
   SelectContent,
@@ -844,7 +847,8 @@ export default function AdminAnalyticsPage() {
                 <div className="space-y-6">
                   <h2 className="text-xl font-bold mb-6">Deepfake Detection Analytics</h2>
                   
-                  {/* Confidence Score Distribution Chart */}
+                  {/* First row of charts */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <Card className="border-0 shadow-md">
                       <CardHeader>
