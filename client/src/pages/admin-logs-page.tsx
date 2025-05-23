@@ -44,6 +44,8 @@ export default function AdminLogsPage() {
     message: string;
     details: string;
   }[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   
   // Fetch system logs from API
   useEffect(() => {
@@ -107,6 +109,77 @@ export default function AdminLogsPage() {
     }
   };
 
+  // Export logs as CSV
+  const handleExportLogs = async () => {
+    setIsExporting(true);
+    try {
+      // Create CSV content from filtered logs
+      const csvHeaders = "Timestamp,Type,Source,Message,Details\n";
+      const csvContent = filteredLogs.map(log => 
+        `"${formatTimestamp(log.timestamp)}","${log.type}","${log.source}","${log.message}","${log.details}"`
+      ).join("\n");
+      
+      const csvData = csvHeaders + csvContent;
+      
+      // Create and download file
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `system-logs-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export successful",
+        description: `Exported ${filteredLogs.length} logs to CSV file`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Unable to export logs. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Clear all logs
+  const handleClearLogs = async () => {
+    if (!confirm("Are you sure you want to clear all logs? This action cannot be undone.")) {
+      return;
+    }
+    
+    setIsClearing(true);
+    try {
+      const response = await fetch("/api/admin/logs/clear", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to clear logs");
+      }
+
+      setLogs([]);
+      toast({
+        title: "Logs cleared",
+        description: "All system logs have been successfully cleared",
+      });
+    } catch (error) {
+      toast({
+        title: "Clear failed",
+        description: "Unable to clear logs. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   // Filter logs based on search term and type
   const filteredLogs = logs.filter(log => {
     const matchesSearch = 
@@ -144,13 +217,27 @@ export default function AdminLogsPage() {
           </div>
           
           <div className="flex items-center gap-4">
-            <Button variant="outline">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-              Export Logs
+            <Button variant="outline" onClick={handleExportLogs} disabled={isExporting}>
+              {isExporting ? (
+                <svg className="animate-spin mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              )}
+              {isExporting ? "Exporting..." : "Export Logs"}
             </Button>
-            <Button variant="destructive">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-              Clear Logs
+            <Button variant="destructive" onClick={handleClearLogs} disabled={isClearing}>
+              {isClearing ? (
+                <svg className="animate-spin mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+              )}
+              {isClearing ? "Clearing..." : "Clear Logs"}
             </Button>
           </div>
         </div>

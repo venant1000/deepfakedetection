@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/layout/sidebar";
 import StatsOverview from "@/components/dashboard/stats-overview";
-import UploadSection from "@/components/dashboard/upload-section";
+
 import RecentAnalyses from "@/components/dashboard/recent-analyses";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -88,7 +88,6 @@ export default function DashboardPage() {
         </div>
         
         <StatsOverview />
-        <UploadSection />
         <RecentAnalyses />
       </div>
     </div>

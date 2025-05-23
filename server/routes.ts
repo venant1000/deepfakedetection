@@ -602,6 +602,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear system logs endpoint
+  app.delete("/api/admin/logs/clear", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check admin access
+      if (!req.user.username.includes("admin")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Log the clear action before clearing
+      await storage.addSystemLog({
+        type: "warning",
+        source: "admin",
+        message: "System logs cleared",
+        details: `Admin user: ${req.user.username} cleared all system logs`
+      });
+      
+      // Clear all logs from storage
+      await storage.clearSystemLogs();
+      
+      res.json({ 
+        success: true,
+        message: "All system logs have been cleared successfully" 
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to clear system logs",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Chatbot API - Process deepfake-related questions
   app.post("/api/chatbot/query", express.json(), async (req, res) => {
     try {

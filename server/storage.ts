@@ -39,6 +39,7 @@ export interface IStorage {
   // System logs operations
   getSystemLogs(): Promise<SystemLog[]>;
   addSystemLog(log: Omit<SystemLog, 'id' | 'timestamp'>): Promise<SystemLog>;
+  clearSystemLogs(): Promise<void>;
   
   // Cache management operations
   clearVideoCache(): Promise<{ deletedCount: number, totalSize: number }>;
