@@ -394,15 +394,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
             ))}
           </div>
           
-          {/* Time markers */}
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>0:00</span>
-            <span>0:30</span>
-            <span>1:00</span>
-            <span>1:30</span>
-            <span>2:00</span>
-            <span>{totalDuration}</span>
-          </div>
+
           
           {/* Timeline explanations - Grid Layout */}
           <div className="mt-6 space-y-4">
