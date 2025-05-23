@@ -52,11 +52,9 @@ export default function AdminAnalytics() {
       // Get data from the API
       const data = await response.json();
       
-      // Prevent state updates when component is unmounting
-      setTimeout(() => {
-        setAnalyticsData(data);
-        setIsLoading(false);
-      }, 50);
+      // Set data immediately without delay
+      setAnalyticsData(data);
+      setIsLoading(false);
       
     } catch (error) {
       console.error("Error fetching analytics:", error);

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
-import { Loader2 } from "lucide-react";
 
 interface AnalyticsDashboardProps {
   analyticsData?: any;
@@ -17,37 +16,19 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
   const performanceChartInstance = useRef<Chart | null>(null);
   const trendsChartInstance = useRef<Chart | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState("total");
   
-  // Use refs to track if component is mounted and prevent updates on unmounted components
-  const isMounted = useRef(true);
-  
   useEffect(() => {
-    // Set mounted flag
-    isMounted.current = true;
-    
     // Only initialize charts if we have data
     if (analyticsData) {
       // Cleanup previous chart instances to prevent duplicates
       destroyCharts();
-      
-      // Add a small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        if (isMounted.current) {
-          setIsLoading(false);
-          initializeCharts();
-        }
-      }, 500);
-      
-      return () => {
-        clearTimeout(timer);
-      };
+      // Initialize charts immediately
+      initializeCharts();
     }
     
     // Cleanup when unmounting
     return () => {
-      isMounted.current = false;
       destroyCharts();
     };
   }, [analyticsData]);  // Re-initialize when data changes
@@ -384,16 +365,7 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 min-h-[400px] items-center justify-center">
-        <div className="glass rounded-xl p-10 text-center col-span-full">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading analytics data...</p>
-        </div>
-      </div>
-    );
-  }
+  // Show analytics immediately without loading state to prevent flickering
 
   return (
     <div className="space-y-8 mb-8">
