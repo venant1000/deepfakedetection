@@ -179,11 +179,13 @@ def analyze_video(video_path):
             frame_confidence = max(0.3, min(0.9, frame_confidence))
             
             # Add frame result with unique confidence
+            # Convert boolean to int for JSON serialization
+            is_deepfake_value = 1 if frame_confidence < 0.5 else 0
             frame_results.append({
                 "frame_index": i,
                 "timestamp": timestamp,
-                "confidence": frame_confidence,
-                "is_deepfake": frame_confidence > 0.7
+                "confidence": float(frame_confidence),  # Ensure it's a float
+                "is_deepfake": is_deepfake_value  # Use int instead of boolean
             })
         
         # Calculate average and maximum confidence from the frame-by-frame results
@@ -260,9 +262,9 @@ def analyze_video(video_path):
         # Generate issues based on average confidence
         issues = []
         # For is_deepfake, we'll use our new average confidence threshold
-        is_deepfake_overall = avg_confidence < 0.6
+        is_deepfake_overall = 1 if avg_confidence < 0.6 else 0  # Use int instead of boolean
         
-        if is_deepfake_overall:
+        if is_deepfake_overall == 1:
             issues.append({
                 "type": "deepfake",
                 "text": f"Video shows AI manipulation signs (confidence: {(1-avg_confidence):.1%})"
