@@ -39,6 +39,11 @@ export interface IStorage {
   getSystemLogs(): Promise<SystemLog[]>;
   addSystemLog(log: Omit<SystemLog, 'id' | 'timestamp'>): Promise<SystemLog>;
   
+  // Cache management operations
+  clearVideoCache(): Promise<{ deletedCount: number, totalSize: number }>;
+  getLastCacheClearTime(): Date | null;
+  getCacheInfo(): Promise<{ videoCount: number, estimatedSize: number, lastCleared: Date | null }>;
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -50,6 +55,7 @@ export class MemStorage implements IStorage {
   public sessionStore: session.Store;
   private currentId: number;
   private logId: number;
+  private lastCacheCleared: Date | null = null;
 
   constructor() {
     this.users = new Map();
@@ -177,6 +183,79 @@ export class MemStorage implements IStorage {
     
     this.systemLogs.set(id, newLog);
     return newLog;
+  }
+  
+  async clearVideoCache(): Promise<{ deletedCount: number, totalSize: number }> {
+    // Calculate approximate size before clearing (15MB per video is a rough estimate)
+    const videoCount = this.videoAnalyses.size;
+    const estimatedSize = videoCount * 15; // Size in MB
+    
+    // Get all video IDs for logging
+    const videoIds = Array.from(this.videoAnalyses.keys());
+    
+    // Clear the video analyses from memory
+    this.videoAnalyses.clear();
+    
+    // Update the last cleared timestamp
+    this.lastCacheCleared = new Date();
+    
+    // Log the cache clearing operation
+    await this.addSystemLog({
+      type: 'info',
+      source: 'admin',
+      message: `Cache cleared by admin`,
+      details: `Cleared ${videoCount} videos (approx. ${estimatedSize}MB)`
+    });
+    
+    // Look for actual video files in the uploads directory and delete them
+    try {
+      const uploadsDir = './uploads';
+      if (fs.existsSync(uploadsDir)) {
+        const files = fs.readdirSync(uploadsDir);
+        let filesDeleted = 0;
+        
+        for (const file of files) {
+          // Only delete video files
+          if (file.endsWith('.mp4') || file.endsWith('.avi') || file.endsWith('.mov')) {
+            fs.unlinkSync(`${uploadsDir}/${file}`);
+            filesDeleted++;
+          }
+        }
+        
+        // Add extra log if physical files were deleted
+        if (filesDeleted > 0) {
+          await this.addSystemLog({
+            type: 'info',
+            source: 'admin',
+            message: `Physical video files deleted`,
+            details: `Removed ${filesDeleted} video files from uploads directory`
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting physical video files:', error);
+      // We don't throw here, as clearing the in-memory cache is still considered successful
+    }
+    
+    return {
+      deletedCount: videoCount,
+      totalSize: estimatedSize
+    };
+  }
+  
+  getLastCacheClearTime(): Date | null {
+    return this.lastCacheCleared;
+  }
+  
+  async getCacheInfo(): Promise<{ videoCount: number, estimatedSize: number, lastCleared: Date | null }> {
+    const videoCount = this.videoAnalyses.size;
+    const estimatedSize = videoCount * 15; // Rough estimate: 15MB per video
+    
+    return {
+      videoCount,
+      estimatedSize,
+      lastCleared: this.lastCacheCleared
+    };
   }
 }
 
