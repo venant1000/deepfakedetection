@@ -58,13 +58,19 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
   const initializeCharts = () => {
     if (!analyticsData) return;
 
-    // Prepare data for usage chart (daily uploads)
+    // Prepare data for usage chart (daily uploads) - with fallback data
     if (usageChartRef.current) {
       const ctx = usageChartRef.current.getContext('2d');
       if (ctx) {
-        const dailyUploads = analyticsData.dailyUploads || [];
-        const labels = dailyUploads.map((item: any) => item.date);
-        const uploadCounts = dailyUploads.map((item: any) => item.count);
+        // Check if we have actual data or if we need defaults
+        const dailyUploads = analyticsData?.dailyUploads || [];
+        // Create at least some data so charts aren't empty
+        const labels = dailyUploads.length > 0 ? 
+          dailyUploads.map((item: any) => item.date) : 
+          ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+        const uploadCounts = dailyUploads.length > 0 ? 
+          dailyUploads.map((item: any) => item.count) : 
+          [analyticsData?.summary?.videoCount || 1, 0, 0, 0, 0, 0, 0];
 
         usageChartInstance.current = new Chart(ctx, {
           type: 'line',
@@ -136,8 +142,10 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
     if (detectionChartRef.current) {
       const ctx = detectionChartRef.current.getContext('2d');
       if (ctx) {
-        const authentic = analyticsData.summary.videoCount - analyticsData.summary.deepfakeCount || 0;
-        const deepfake = analyticsData.summary.deepfakeCount || 0;
+        const totalVideos = analyticsData?.summary?.videoCount || 0;
+        const totalDeepfakes = analyticsData?.summary?.deepfakeCount || 0;
+        const authentic = totalVideos - totalDeepfakes;
+        const deepfake = totalDeepfakes;
         
         detectionChartInstance.current = new Chart(ctx, {
           type: 'doughnut',
@@ -191,9 +199,14 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
     if (performanceChartRef.current) {
       const ctx = performanceChartRef.current.getContext('2d');
       if (ctx) {
-        const processingTimes = analyticsData.processingTimes || [];
-        const timeRanges = processingTimes.map((item: any) => item.timeRange);
-        const counts = processingTimes.map((item: any) => item.count);
+        const processingTimes = analyticsData?.processingTimes || [];
+        // Add default data if none exists
+        const timeRanges = processingTimes.length > 0 ? 
+          processingTimes.map((item: any) => item.timeRange) :
+          ['<30s', '30s-1m', '1m-2m', '2m-5m', '>5m'];
+        const counts = processingTimes.length > 0 ? 
+          processingTimes.map((item: any) => item.count) :
+          [analyticsData?.summary?.videoCount || 1, 0, 0, 0, 0];
 
         performanceChartInstance.current = new Chart(ctx, {
           type: 'bar',
@@ -252,9 +265,17 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
     if (trendsChartRef.current) {
       const ctx = trendsChartRef.current.getContext('2d');
       if (ctx) {
-        const detectionRates = analyticsData.detectionRates || [];
-        const dates = detectionRates.map((item: any) => item.date);
-        const rates = detectionRates.map((item: any) => item.rate);
+        const detectionRates = analyticsData?.detectionRates || [];
+        
+        // Add default data if none exists
+        const dates = detectionRates.length > 0 ? 
+          detectionRates.map((item: any) => item.date) :
+          ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+          
+        const rates = detectionRates.length > 0 ? 
+          detectionRates.map((item: any) => item.rate) :
+          [0, 0, 0, 0, 0, 0, analyticsData?.summary?.deepfakeCount && analyticsData?.summary?.videoCount ? 
+            ((analyticsData.summary.deepfakeCount / analyticsData.summary.videoCount) * 100) : 0];
 
         trendsChartInstance.current = new Chart(ctx, {
           type: 'line',
