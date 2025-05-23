@@ -260,6 +260,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Clear all video analyses and delete video files
+  app.post("/api/videos/clear-all", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Admin check
+      if (!req.user.username.includes("admin")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Clear all videos from storage and disk
+      const result = await storage.clearVideoCache();
+      
+      // Return success message with details
+      res.json({
+        success: true,
+        message: "All video files and analyses have been cleared",
+        deletedCount: result.deletedCount,
+        freedSpace: `${(result.totalSize / (1024 * 1024)).toFixed(2)} MB`
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to clear video cache",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   // Admin routes - For simplicity in this demo, we'll check if the username contains "admin"
   async function adminStatsHandler(req: Request, res: any) {

@@ -194,8 +194,55 @@ export class MemStorage implements IStorage {
     // Get all video IDs for logging
     const videoIds = Array.from(this.videoAnalyses.keys());
     
+    // Attempt to delete the physical video files
+    let deletedFiles = 0;
+    let totalSizeBytes = 0;
+    
+    try {
+      // Get the uploads directory path
+      const uploadsDir = './uploads';
+      
+      // Check if directory exists
+      if (fs.existsSync(uploadsDir)) {
+        // Read all files in the directory
+        const files = fs.readdirSync(uploadsDir);
+        
+        // Delete each video file
+        for (const file of files) {
+          // Only delete mp4 files
+          if (file.endsWith('.mp4')) {
+            const filePath = `${uploadsDir}/${file}`;
+            
+            try {
+              // Get file size before deleting
+              const stats = fs.statSync(filePath);
+              totalSizeBytes += stats.size;
+              
+              // Delete the file
+              fs.unlinkSync(filePath);
+              deletedFiles++;
+              
+              console.log(`Deleted video file: ${filePath}`);
+            } catch (fileError) {
+              console.error(`Failed to delete file ${filePath}:`, fileError);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting video files:', error);
+    }
+    
     // Clear the video analyses from memory
     this.videoAnalyses.clear();
+    
+    // Log this operation
+    await this.addSystemLog({
+      type: 'info',
+      source: 'storage',
+      message: `Cleared video cache: ${deletedFiles} files deleted`,
+      details: `Freed approximately ${(totalSizeBytes / (1024 * 1024)).toFixed(2)} MB of disk space`
+    });
     
     // Update the last cleared timestamp
     this.lastCacheCleared = new Date();
