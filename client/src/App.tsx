@@ -14,7 +14,7 @@ import AdminUsersPage from "@/pages/admin-users-page";
 import AdminDeepfakeAnalytics from "@/pages/admin-deepfake-analytics";
 import AdminAnalytics from "@/pages/admin-analytics";
 import AdminLogsPage from "@/pages/admin-logs-page";
-import AdminSettingsPage from "@/pages/admin-settings-page";
+
 import ReportsPage from "@/pages/reports-page";
 import ProfilePage from "@/pages/profile-page";
 import SettingsPage from "@/pages/settings-page";
@@ -39,7 +39,7 @@ function Router() {
       <ProtectedRoute path="/admin/deepfake-analytics" component={AdminDeepfakeAnalytics} />
       <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} />
       <ProtectedRoute path="/admin/logs" component={AdminLogsPage} />
-      <ProtectedRoute path="/admin/settings" component={AdminSettingsPage} />
+
       <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
