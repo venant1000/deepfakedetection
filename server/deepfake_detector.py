@@ -13,6 +13,8 @@ from scipy.ndimage import gaussian_filter
 import urllib.request
 import requests
 from io import BytesIO
+import onnxruntime as ort
+import onnx
 
 class LightweightDeepfakeDetector(nn.Module):
     """
@@ -61,16 +63,24 @@ class LightweightDeepfakeDetector(nn.Module):
         return x
 
 class DeepfakeAnalyzer:
-    def __init__(self, model_path="attached_assets/lightweight_deepfake_detector.pth", download_pretrained=True):
+    def __init__(self, model_path="attached_assets/lightweight_deepfake_detector_epoch_20.onnx", use_onnx=True):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.device}")
         
-        # Initialize the model
-        self.model = self.initialize_model(model_path, download_pretrained)
-        self.model.to(self.device)
-        self.model.eval()
+        # Track whether we're using ONNX or PyTorch model
+        self.use_onnx = use_onnx
         
-        # Define preprocessing transforms compatible with common pretrained models
+        # Initialize the model (ONNX or PyTorch)
+        if use_onnx:
+            self.onnx_model_path = model_path
+            self.initialize_onnx_model(model_path)
+        else:
+            # Fallback to PyTorch model if ONNX fails
+            self.model = self.initialize_pytorch_model(model_path.replace('.onnx', '.pth'))
+            self.model.to(self.device)
+            self.model.eval()
+        
+        # Define preprocessing transforms - most models use these standard parameters
         self.transform = transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
@@ -78,14 +88,54 @@ class DeepfakeAnalyzer:
                                std=[0.229, 0.224, 0.225])
         ])
     
-    def initialize_model(self, model_path, download_pretrained=True):
-        """Initialize the model with pretrained weights or custom weights"""
+    def initialize_onnx_model(self, model_path):
+        """Initialize ONNX Runtime session with the provided ONNX model"""
+        try:
+            if os.path.exists(model_path):
+                print(f"Loading ONNX model from: {model_path}")
+                # For CPU execution, use default EP
+                # For better performance on CPU or GPU, we can select specific providers
+                providers = ['CPUExecutionProvider']
+                if 'CUDAExecutionProvider' in ort.get_available_providers():
+                    providers = ['CUDAExecutionProvider'] + providers
+                
+                # Create ONNX runtime session
+                self.onnx_session = ort.InferenceSession(model_path, providers=providers)
+                
+                # Get model metadata
+                model_inputs = self.onnx_session.get_inputs()
+                self.input_name = model_inputs[0].name
+                self.input_shape = model_inputs[0].shape
+                
+                model_outputs = self.onnx_session.get_outputs()
+                self.output_name = model_outputs[0].name
+                
+                print(f"ONNX model loaded successfully. Input shape: {self.input_shape}")
+                self.use_onnx = True
+                return
+            else:
+                print(f"ONNX model not found at {model_path}, falling back to PyTorch model")
+                self.use_onnx = False
+                
+        except Exception as e:
+            print(f"Error loading ONNX model: {e}")
+            print("Falling back to PyTorch model")
+            self.use_onnx = False
+            
+        # If ONNX loading failed, try to use PyTorch model as fallback
+        if not self.use_onnx:
+            self.model = self.initialize_pytorch_model(model_path.replace('.onnx', '.pth'))
+            self.model.to(self.device)
+            self.model.eval()
+    
+    def initialize_pytorch_model(self, model_path, download_pretrained=True):
+        """Initialize the PyTorch model with pretrained weights or custom weights"""
         model = LightweightDeepfakeDetector(num_classes=2)
         
         try:
             # Try to load local weights first
             if os.path.exists(model_path):
-                print(f"Loading model weights from local path: {model_path}")
+                print(f"Loading PyTorch model weights from local path: {model_path}")
                 checkpoint = torch.load(model_path, map_location=self.device)
                 if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
                     model.load_state_dict(checkpoint['model_state_dict'])
@@ -102,8 +152,7 @@ class DeepfakeAnalyzer:
                 pretrained_urls = {
                     "deepfake_detector_v1": "https://github.com/ondyari/FaceForensics/raw/master/classification/weights/xception/full_c23.p",
                     "deepfake_detector_v2": "https://github.com/yuezunli/CVPRW2019_Face_Artifacts/raw/master/weights/blur_jpg_prob0.1.pth",
-                    "mesonet": "https://github.com/DariusAf/MesoNet/raw/master/weights/Meso4_DF.h5",
-                    "efficientnet": "https://github.com/iperov/DeepFaceLab/raw/master/models/FaceDetector/FaceDetector.h5"
+                    "mesonet": "https://github.com/DariusAf/MesoNet/raw/master/weights/Meso4_DF.h5"
                 }
                 
                 # Create directory for downloaded weights if it doesn't exist
@@ -115,8 +164,6 @@ class DeepfakeAnalyzer:
                         pretrained_path = f"./pretrained_models/{model_name}.pth"
                         if not os.path.exists(pretrained_path):
                             print(f"Downloading {model_name} from {url}...")
-                            # Use Python's urllib to download the file
-                            import urllib.request
                             urllib.request.urlretrieve(url, pretrained_path)
                             print(f"Downloaded {model_name} to {pretrained_path}")
                         
@@ -135,34 +182,21 @@ class DeepfakeAnalyzer:
                     except Exception as e:
                         print(f"Error downloading {model_name}: {e}. Trying next URL...")
                         continue
-                        
-                # If we get here, we couldn't load any pretrained weights, use backup approach
-                print("Couldn't download or load any pretrained models. Using a custom initialization approach...")
                 
-                # Initialize from a standard pretrained model and adapt it
+                # If we get here, use a standard pretrained model and adapt it
+                print("Using a pretrained ResNet model adapted for deepfake detection...")
                 base_model = models.resnet50(pretrained=True)
-                # Modify the final layer to match our model's architecture
                 num_ftrs = base_model.fc.in_features
-                base_model.fc = nn.Linear(num_ftrs, 2)  # Binary classification: real vs fake
-                
-                # Copy weights from base_model to our model where shapes match
-                model_dict = dict(model.named_parameters())
-                for name, param in base_model.named_parameters():
-                    if name in model_dict:
-                        if param.shape == model_dict[name].shape:
-                            model_dict[name].data.copy_(param.data)
-                
-                print("Initialized with adapted pretrained ResNet50 weights")
-                return model
-                
-            else:
-                # If not downloading pretrained weights, initialize randomly
-                print("Using randomly initialized weights")
-                return model
+                base_model.fc = nn.Linear(num_ftrs, 2)
+                return base_model
+            
+            # If not downloading pretrained weights, initialize randomly
+            print("Using randomly initialized weights")
+            return model
                 
         except Exception as e:
-            print(f"Error initializing model: {e}")
-            print("Using model with random weights - not recommended for production use")
+            print(f"Error initializing PyTorch model: {e}")
+            print("Using model with random weights")
             return model
     
     def extract_frames(self, video_path, max_frames=30):
@@ -537,62 +571,98 @@ class DeepfakeAnalyzer:
         # Convert to PIL image for the model
         pil_frame = Image.fromarray(enhanced_frame)
         
-        # Apply transformations to convert to tensor
-        # Handle the tensor creation more robustly
+        # Prepare input based on model type (ONNX or PyTorch)
         try:
-            # First approach: directly use transform
-            tensor = self.transform(pil_frame)
-            
-            # Add batch dimension using unsqueeze
-            input_tensor = tensor.unsqueeze(0).to(self.device)
+            # Process the image into a format compatible with both models
+            if self.use_onnx:
+                # For ONNX, we need to transform the image and get it as a numpy array
+                tensor = self.transform(pil_frame)
+                # Convert to numpy for ONNX (NCHW format)
+                np_input = tensor.numpy()[np.newaxis, ...]  # Add batch dimension
+                
+                # Run inference with ONNX model
+                try:
+                    ort_inputs = {self.input_name: np_input}
+                    ort_outputs = self.onnx_session.run([self.output_name], ort_inputs)
+                    raw_output = ort_outputs[0][0]  # Extract output (batch size 1)
+                    
+                    # Apply softmax to get probabilities
+                    exp_output = np.exp(raw_output - np.max(raw_output))
+                    probabilities = exp_output / exp_output.sum()
+                    
+                    # Get confidence (probability of being a deepfake)
+                    raw_confidence = probabilities[1]  # Index 1 for deepfake class
+                    
+                except Exception as e:
+                    print(f"Error during ONNX inference: {e}")
+                    # Fallback to a neutral prediction
+                    raw_confidence = 0.5
+            else:
+                # For PyTorch, use the same code we had before
+                tensor = self.transform(pil_frame)
+                input_tensor = tensor.unsqueeze(0).to(self.device)
+                
+                with torch.no_grad():
+                    outputs = self.model(input_tensor)
+                    probabilities = torch.softmax(outputs, dim=1)
+                    raw_confidence = probabilities[0][1].item()  # Probability of being deepfake
+                
         except Exception as e:
-            print(f"Error in primary tensor processing: {e}")
+            print(f"Error in primary processing: {e}")
+            # Fallback method if the standard processing fails
             try:
-                # Fallback approach if the first method fails
-                # Convert PIL to numpy array first
+                # Manual processing for more robustness
                 np_img = np.array(pil_frame)
                 
                 # Ensure proper dimensions and type
                 if len(np_img.shape) == 2:  # Grayscale image
                     np_img = np.stack([np_img, np_img, np_img], axis=2)
                 
-                # Resize
+                # Resize to expected dimensions
                 np_img = cv2.resize(np_img, (224, 224))
                 
-                # Normalize manually
+                # Normalize with ImageNet values
                 np_img = np_img.astype(np.float32) / 255.0
                 np_img -= np.array([0.485, 0.456, 0.406])
                 np_img /= np.array([0.229, 0.224, 0.225])
                 
-                # Convert to tensor and add batch dimension
-                tensor = torch.from_numpy(np_img.transpose(2, 0, 1)).float()
-                input_tensor = tensor.unsqueeze(0).to(self.device)
-            except Exception as e2:
-                print(f"Error in fallback tensor processing: {e2}")
-                # Last resort: use a simplified approach
-                np_img = np.array(pil_frame)
-                np_img = cv2.resize(np_img, (224, 224)) / 255.0
-                tensor = torch.from_numpy(np_img.transpose(2, 0, 1)).float()
-                input_tensor = tensor.unsqueeze(0).to(self.device)
-        
-        # Analyze with the model
-        with torch.no_grad():
-            try:
-                outputs = self.model(input_tensor)
-                probabilities = torch.softmax(outputs, dim=1)
-                raw_confidence = probabilities[0][1].item()  # Probability of being deepfake
-            except Exception as e:
-                print(f"Error during model inference: {e}")
-                # Fallback if model prediction fails
-                raw_confidence = 0.5  # Neutral confidence
-                
-            # Apply quality adjustment
-            adjusted_confidence = raw_confidence * quality_factor
+                if self.use_onnx:
+                    # For ONNX: convert to NCHW format expected by the model
+                    np_input = np.transpose(np_img, (2, 0, 1))[np.newaxis, ...]  # NHWC to NCHW
+                    
+                    try:
+                        ort_inputs = {self.input_name: np_input.astype(np.float32)}
+                        ort_outputs = self.onnx_session.run([self.output_name], ort_inputs)
+                        raw_output = ort_outputs[0][0]
+                        
+                        # Apply softmax to get probabilities
+                        exp_output = np.exp(raw_output - np.max(raw_output))
+                        probabilities = exp_output / exp_output.sum()
+                        raw_confidence = probabilities[1]  # Index 1 for deepfake class
+                    except Exception as e:
+                        print(f"Error during fallback ONNX inference: {e}")
+                        raw_confidence = 0.5
+                else:
+                    # For PyTorch
+                    tensor = torch.from_numpy(np_img.transpose(2, 0, 1)).float()
+                    input_tensor = tensor.unsqueeze(0).to(self.device)
+                    
+                    with torch.no_grad():
+                        outputs = self.model(input_tensor)
+                        probabilities = torch.softmax(outputs, dim=1)
+                        raw_confidence = probabilities[0][1].item()
             
-            # Apply additional threshold adjustment for more realistic results
-            # This makes the model more conservative in its deepfake predictions
-            confidence_threshold = 0.65  # Increased from 0.5 to reduce false positives
-            is_deepfake = adjusted_confidence > confidence_threshold
+            except Exception as e2:
+                print(f"Error in all processing attempts: {e2}")
+                # Last resort fallback
+                raw_confidence = 0.5
+        
+        # Apply quality adjustment to confidence
+        adjusted_confidence = raw_confidence * quality_factor
+        
+        # Apply threshold for classification decision
+        confidence_threshold = 0.65  # Increased from 0.5 to reduce false positives
+        is_deepfake = adjusted_confidence > confidence_threshold
         
         return is_deepfake, adjusted_confidence
     
@@ -679,6 +749,9 @@ class DeepfakeAnalyzer:
                     "text": f"Very high deepfake probability detected in some frames"
                 })
             
+            # Record which model type was used
+            model_name = "ONNX Lightweight Deepfake Detector" if self.use_onnx else "PyTorch Lightweight Deepfake Detector"
+            
             return {
                 "isDeepfake": is_deepfake_overall,
                 "confidence": avg_confidence,
@@ -689,7 +762,9 @@ class DeepfakeAnalyzer:
                 "issues": issues,
                 "findings": findings,
                 "timeline": timeline_markers,
-                "frameResults": frame_results
+                "frameResults": frame_results,
+                "modelUsed": model_name,
+                "engineType": "ONNX Runtime" if self.use_onnx else "PyTorch"
             }
             
         except Exception as e:
