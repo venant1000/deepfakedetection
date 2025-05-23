@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Download, ArrowUpRight, RefreshCw, Calendar, ChevronDown } from "lucide-react";
+import { Loader2, Download, ArrowUpRight, RefreshCw, Calendar, ChevronDown, FileText, FileSpreadsheet } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -123,6 +123,64 @@ export default function AdminDeepfakeAnalytics() {
     fetchAnalytics(true);
   };
 
+  // Export to CSV
+  const exportToCSV = () => {
+    if (!analyticsData) return;
+
+    const csvData = [
+      // Summary data
+      ['Deepfake Analytics Report'],
+      ['Generated on:', new Date().toLocaleDateString()],
+      [''],
+      ['Summary Statistics'],
+      ['Total Users', analyticsData.summary?.totalUsers || 0],
+      ['Total Videos Analyzed', analyticsData.summary?.videoCount || 0],
+      ['Deepfakes Detected', analyticsData.summary?.deepfakeCount || 0],
+      ['Detection Accuracy', `${analyticsData.summary?.systemHealth || 0}%`],
+      [''],
+      ['Daily Upload Statistics'],
+      ['Date', 'Upload Count'],
+      ...(analyticsData.dailyUploads || []).map((item: any) => [item.date, item.count]),
+      [''],
+      ['Detection Rate Trends'],
+      ['Date', 'Detection Rate (%)'],
+      ...(analyticsData.detectionRates || []).map((item: any) => [item.date, item.rate]),
+      [''],
+      ['Processing Time Distribution'],
+      ['Time Range', 'Count'],
+      ...(analyticsData.processingTimes || []).map((item: any) => [item.timeRange, item.count]),
+    ];
+
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `deepfake-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export successful",
+      description: "Analytics data has been exported to CSV.",
+    });
+  };
+
+  // Export to PDF (simplified version using browser print)
+  const exportToPDF = () => {
+    toast({
+      title: "PDF Export",
+      description: "Use your browser's print function (Ctrl/Cmd + P) and select 'Save as PDF' to export this page.",
+    });
+    
+    // Trigger browser print dialog
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
   // Chart colors
   const colors = {
     primary: "#00ff88",
@@ -179,6 +237,28 @@ export default function AdminDeepfakeAnalytics() {
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={exportToCSV}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Export as CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToPDF}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               <div className="flex items-center border rounded-md px-3 py-1">
                 <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
