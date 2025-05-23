@@ -518,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         summary: {
           totalUsers,
           videoCount: videosAnalyzed,
-          deepfakesDetected,
+          deepfakeCount: deepfakesDetected,
           systemHealth: parseFloat(systemHealth.toFixed(1))
         },
         dailyUploads,

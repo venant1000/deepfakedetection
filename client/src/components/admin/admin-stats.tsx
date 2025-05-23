@@ -26,7 +26,7 @@ export default function AdminStats() {
           setStatsData({
             totalUsers: data.summary.totalUsers,
             videoCount: data.summary.videoCount,
-            deepfakesDetected: data.summary.deepfakesDetected,
+            deepfakesDetected: data.summary.deepfakeCount,
             systemHealth: data.summary.systemHealth
           });
         }
