@@ -339,15 +339,15 @@ export default function AdminDeepfakeAnalytics() {
                   </span>
                 </div>
                 <CardTitle className="text-3xl font-bold">
-                  {analyticsData?.summary?.videoCount && analyticsData?.summary?.deepfakesDetected 
-                    ? `${((analyticsData.summary.deepfakesDetected / analyticsData.summary.videoCount) * 100).toFixed(1)}%` 
+                  {analyticsData?.summary?.videoCount && analyticsData?.summary?.deepfakeCount 
+                    ? `${((analyticsData.summary.deepfakeCount / analyticsData.summary.videoCount) * 100).toFixed(1)}%` 
                     : '0%'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Progress value={
-                  analyticsData?.summary?.videoCount && analyticsData?.summary?.deepfakesDetected 
-                    ? (analyticsData.summary.deepfakesDetected / analyticsData.summary.videoCount) * 100
+                  analyticsData?.summary?.videoCount && analyticsData?.summary?.deepfakeCount 
+                    ? (analyticsData.summary.deepfakeCount / analyticsData.summary.videoCount) * 100
                     : 0
                 } className="h-2 mb-2" />
                 <div className="text-xs text-muted-foreground">
@@ -364,18 +364,12 @@ export default function AdminDeepfakeAnalytics() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.2 8.4-4.2 4.2-4.3-4.2"/><path d="m21.2 15.6-4.2-4.2-4.3 4.2"/><line x1="3" x2="9.5" y1="12" y2="12"/></svg>
                   </span>
                 </div>
-                <CardTitle className="text-3xl font-bold">{
-                  analyticsData?.summary?.videoCount 
-                    ? `${(parseFloat(((1 - (analyticsData?.detectionRates?.reduce((acc: number, curr: any) => acc + curr.rate, 0) / analyticsData?.detectionRates?.length || 0) / 100)).toFixed(2)) * 100).toFixed(1)}%` 
-                    : '0%'
-                }</CardTitle>
+                <CardTitle className="text-3xl font-bold">
+                  {analyticsData?.summary?.systemHealth ? `${analyticsData.summary.systemHealth}%` : '0%'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <Progress value={
-                  analyticsData?.summary?.videoCount 
-                    ? (1 - (analyticsData?.detectionRates?.reduce((acc: number, curr: any) => acc + curr.rate, 0) / analyticsData?.detectionRates?.length || 0) / 100) * 100
-                    : 0
-                } className="h-2 mb-2" />
+                <Progress value={analyticsData?.summary?.systemHealth || 0} className="h-2 mb-2" />
                 <div className="text-xs text-muted-foreground">
                   Average detection confidence score
                 </div>
@@ -440,7 +434,8 @@ export default function AdminDeepfakeAnalytics() {
                           data={[
                             { 
                               name: "Authentic Videos", 
-                              value: analyticsData?.summary?.videoCount ? analyticsData.summary.videoCount - analyticsData.summary.deepfakeCount : 0
+                              value: analyticsData?.summary?.videoCount && analyticsData?.summary?.deepfakeCount ? 
+                                analyticsData.summary.videoCount - analyticsData.summary.deepfakeCount : 0
                             },
                             { 
                               name: "Deepfake Detected", 
@@ -570,9 +565,9 @@ export default function AdminDeepfakeAnalytics() {
                       <PieChart>
                         <Pie
                           data={analyticsData?.classificationBreakdown || [
-                            { name: "Authentic", value: 65, color: "#00ff88" },
-                            { name: "Deepfake", value: 25, color: "#ff3366" },
-                            { name: "Moderate/Suspicious", value: 10, color: "#ffaa00" }
+                            { name: "Authentic", value: 0, color: "#00ff88" },
+                            { name: "Deepfake", value: 0, color: "#ff3366" },
+                            { name: "Moderate/Suspicious", value: 0, color: "#ffaa00" }
                           ]}
                           nameKey="name"
                           dataKey="value"
