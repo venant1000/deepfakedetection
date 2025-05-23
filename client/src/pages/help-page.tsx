@@ -144,33 +144,7 @@ export default function HelpPage() {
     }
   ];
 
-  // Support resources
-  const supportResources = [
-    {
-      title: "Video Tutorials",
-      description: "Watch step-by-step guides on how to use all features",
-      link: "#tutorials",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-    },
-    {
-      title: "Knowledge Base",
-      description: "Detailed articles on common questions and features",
-      link: "#knowledge-base",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-    },
-    {
-      title: "Community Forum",
-      description: "Connect with other users and share tips",
-      link: "#forum",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    },
-    {
-      title: "API Documentation",
-      description: "Technical guides for developers and integrations",
-      link: "#api-docs",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M18 10h-4V4h-4v6H6l6 6 6-6zm-8 8v2h8v-2h-8z"/></svg>
-    }
-  ];
+
 
   // Filter FAQs based on search query
   const filteredFAQs = searchQuery.trim() === "" 
@@ -224,7 +198,6 @@ export default function HelpPage() {
           <TabsList className="mb-6 w-full md:w-auto">
             <TabsTrigger value="faq">FAQ</TabsTrigger>
             <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
           </TabsList>
           
           {/* FAQ Tab */}
@@ -488,125 +461,7 @@ export default function HelpPage() {
               </div>
             </div>
           </TabsContent>
-          
-          {/* Resources Tab */}
-          <TabsContent value="resources">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Support Resources</CardTitle>
-                  <CardDescription>
-                    Access guides and documentation to help you use DeepGuard AI
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {supportResources.map((resource, index) => (
-                      <a 
-                        key={index} 
-                        href={resource.link}
-                        className="flex flex-col items-center bg-muted/30 p-4 rounded-lg hover:bg-muted transition-colors"
-                      >
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                          {resource.icon}
-                        </div>
-                        <h3 className="text-md font-medium mb-1">{resource.title}</h3>
-                        <p className="text-sm text-muted-foreground text-center">{resource.description}</p>
-                      </a>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Educational Articles</CardTitle>
-                    <CardDescription>
-                      Learn more about deepfakes and media manipulation
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article1">The Evolution of Deepfake Technology</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          A comprehensive overview of how deepfake technology has evolved and where it's headed.
-                        </p>
-                      </div>
-                      <Separator />
-                      <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article2">How to Spot a Deepfake: The Human Way</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Learn the visual cues that can help you identify deepfakes without AI assistance.
-                        </p>
-                      </div>
-                      <Separator />
-                      <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article3">Deepfakes and Digital Literacy: Staying Informed</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Why digital literacy is more important than ever in the age of AI-generated content.
-                        </p>
-                      </div>
-                      <Separator />
-                      <div>
-                        <h3 className="font-medium text-primary hover:underline">
-                          <a href="#article4">The Legal Landscape of Synthetic Media</a>
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          An exploration of the current and emerging legal frameworks around deepfakes.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Newsletter</CardTitle>
-                    <CardDescription>
-                      Subscribe to receive the latest updates and resources
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form className="space-y-4">
-                      <div className="space-y-2">
-                        <label htmlFor="email-subscribe" className="text-sm font-medium">
-                          Email Address
-                        </label>
-                        <Input 
-                          id="email-subscribe" 
-                          type="email" 
-                          placeholder="your@email.com" 
-                          required 
-                        />
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <input 
-                          type="checkbox" 
-                          id="newsletter-consent" 
-                          className="h-4 w-4 rounded border-gray-300 mt-1"
-                          required
-                        />
-                        <label htmlFor="newsletter-consent" className="text-sm text-muted-foreground">
-                          I agree to receive educational content, updates, and resources about deepfake detection and media verification.
-                        </label>
-                      </div>
-                      <Button className="w-full" type="submit">
-                        Subscribe
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
+
         </Tabs>
       </div>
     </div>
