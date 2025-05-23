@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
       
-      // Write the uploaded video to temporary file
+      // Write the uploaded video to temporary file - this will be deleted after analysis
       fs.writeFileSync(tempVideoPath, req.file.buffer);
       
       // Run PyTorch deepfake analysis
@@ -156,14 +156,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         analysisData = await runDeepfakeAnalysis(tempVideoPath);
         console.log("Analysis completed. Results:", JSON.stringify(analysisData, null, 2));
         
-        // Keep the video file for playback
-        console.log(`Video file saved at ${tempVideoPath} for future playback`);
+        // Delete the video file after analysis to prevent bias
+        try {
+          fs.unlinkSync(tempVideoPath);
+          console.log(`Video file ${tempVideoPath} has been analyzed and deleted to prevent bias`);
+        } catch (deleteError) {
+          console.error(`Failed to delete video file: ${deleteError}`);
+        }
         
         if (analysisData.error) {
           throw new Error(analysisData.error);
         }
       } catch (error) {
-        // Keep the video file even if analysis fails
+        // Delete the video file even if analysis fails
+        try {
+          fs.unlinkSync(tempVideoPath);
+          console.log(`Video file deleted after failed analysis`);
+        } catch (deleteError) {
+          console.error(`Failed to delete video file: ${deleteError}`);
+        }
+        
         console.error("Deepfake analysis failed:", error);
         const errorMessage = error instanceof Error ? error.message : String(error);
         return res.status(500).json({ 
