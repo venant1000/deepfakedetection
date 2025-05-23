@@ -284,11 +284,11 @@ export default function AnalyticsDashboard({ analyticsData }: AnalyticsDashboard
             datasets: [{
               label: 'Detection Rate',
               data: rates,
-              borderColor: 'hsl(var(--primary))',
+              borderColor: 'hsl(280, 84%, 60%)',
               backgroundColor: 'transparent',
               tension: 0.4,
               borderWidth: 3,
-              pointBackgroundColor: 'hsl(var(--primary))',
+              pointBackgroundColor: 'hsl(280, 84%, 60%)',
               pointRadius: 4,
               pointHoverRadius: 6
             }]
