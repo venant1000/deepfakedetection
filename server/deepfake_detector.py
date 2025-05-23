@@ -212,112 +212,145 @@ class DeepfakeAnalyzer:
         if frame_count <= 0:
             print(f"Warning: Could not determine frame count for {video_path}")
             frame_count = 1000  # Assume a reasonable number
-            
-        # Simple uniform sampling for debugging the model issue
-        # This ensures we get diverse frames from throughout the video
-        if max_frames >= frame_count:
-            # If we want more frames than exist, use all frames
-            target_indices = list(range(frame_count))
-        else:
-            # Create evenly spaced indices
-            target_indices = [int(i * frame_count / max_frames) for i in range(max_frames)]
         
-        print(f"Will extract {len(target_indices)} frames at indices: {target_indices[:5]}...")
+        # Advanced frame extraction with intelligent selection:
+        # 1. Use scene detection for more interesting frames
+        # 2. Prioritize frames with faces (common deepfake targets)
+        # 3. Ensure good distribution throughout the video
         
-        # Extract the selected frames
-        for idx in target_indices:
-            # Seek to the target frame
-            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+        # Set up variables for our advanced extraction
+        scene_changes = []
+        candidate_frames = []
+        last_gray = None
+        
+        # Step size for initial pass - examine more frames than we'll actually use
+        step = max(1, frame_count // (max_frames * 3))
+        frame_idx = 0
+        
+        # First pass: find interesting frames (scene changes, faces, good quality)
+        while cap.isOpened() and frame_idx < frame_count:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
             ret, frame = cap.read()
             
-            if ret:
-                # Make a small random modification to ensure frames are different
-                # This is just for debugging the equal confidence issue
-                noise = np.random.normal(0, 2, frame.shape).astype(np.uint8)
-                frame = cv2.add(frame, noise)
+            if not ret:
+                break
                 
-                # Calculate timestamp
-                timestamp = idx / fps if fps > 0 else 0
-                frames.append((frame, timestamp))
-                print(f"Extracted frame at index {idx}, timestamp {timestamp:.2f}s")
-            else:
-                print(f"Failed to extract frame at index {idx}")
-                
-        cap.release()
-        
-        # Return the frames along with video info
-        return frames, fps, frame_count
-                
-                # 2. Check for faces (deepfakes often target faces)
-                face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-                faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-                if len(faces) > 0:
-                    interest_score += 50 * len(faces)  # Prioritize frames with faces
-                
-                # 3. Check for image quality/complexity
-                blur = cv2.Laplacian(gray, cv2.CV_64F).var()
-                if blur > 100:  # Clear images
-                    interest_score += 30
-                
-                # Store this frame as a candidate with its score
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                candidate_frames.append((frame_rgb, frame_idx / fps, interest_score))
-                
-                last_gray = gray
+            # Convert to grayscale for scene detection and face detection
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             
-            frame_idx += 1
+            # Initialize interest score for this frame
+            interest_score = 0
+            
+            # 1. Detect scene changes
+            if last_gray is not None:
+                # Calculate difference between consecutive frames
+                diff = cv2.absdiff(gray, last_gray)
+                non_zero = cv2.countNonZero(diff)
+                if non_zero > (gray.shape[0] * gray.shape[1]) * 0.15:  # If >15% changed
+                    scene_changes.append(frame_idx)
+                    interest_score += 100  # High priority for scene changes
+            
+            # 2. Check for faces (deepfakes often target faces)
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+            if len(faces) > 0:
+                interest_score += 50 * len(faces)  # Prioritize frames with faces
+            
+            # 3. Check for image quality/complexity
+            blur = cv2.Laplacian(gray, cv2.CV_64F).var()
+            if blur > 100:  # Clear images
+                interest_score += 30
+            
+            # Store this frame as a candidate with its score
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            candidate_frames.append((frame_rgb, frame_idx / fps, interest_score))
+            
+            last_gray = gray
+            frame_idx += step
         
-        # Reset the video capture for the second pass
-        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        
-        # If we didn't get any candidates with the first approach, fall back to regular sampling
+        # If we didn't get any candidates, fall back to uniform sampling
         if not candidate_frames:
-            frame_idx = 0
-            while cap.isOpened() and len(frames) < max_frames:
+            print("No interesting frames found, falling back to uniform sampling")
+            if max_frames >= frame_count:
+                target_indices = list(range(frame_count))
+            else:
+                target_indices = [int(i * frame_count / max_frames) for i in range(max_frames)]
+            
+            print(f"Will extract {len(target_indices)} frames at indices: {target_indices[:5]}...")
+            
+            # Extract the selected frames with uniform sampling
+            for idx in target_indices:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
                 ret, frame = cap.read()
-                if not ret:
-                    break
                 
-                if frame_idx % step == 0:
+                if ret:
+                    # Calculate timestamp
+                    timestamp = idx / fps if fps > 0 else 0
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    frames.append((frame_rgb, frame_idx / fps))
-                
-                frame_idx += 1
+                    frames.append((frame_rgb, timestamp))
+                    print(f"Extracted frame at index {idx}, timestamp {timestamp:.2f}s")
+                else:
+                    print(f"Failed to extract frame at index {idx}")
         else:
             # Sort candidates by interest score (highest first)
             candidate_frames.sort(key=lambda x: x[2], reverse=True)
             
-            # Take the top frames up to max_frames
-            selected_frames = candidate_frames[:max_frames]
+            # Take the top frames up to max_frames, but ensure we don't have too many similar frames
+            selected_frames = []
+            timestamps_used = set()
             
-            # Sort them by timestamp to maintain chronological order
+            # First, add high-interest frames ensuring they're not too close together
+            for frame, timestamp, score in candidate_frames:
+                # Skip if we already have enough frames
+                if len(selected_frames) >= max_frames:
+                    break
+                    
+                # Skip if this timestamp is too close to one we already selected
+                too_close = False
+                for used_ts in timestamps_used:
+                    if abs(timestamp - used_ts) < 0.5:  # Within half a second
+                        too_close = True
+                        break
+                        
+                if not too_close:
+                    selected_frames.append((frame, timestamp, score))
+                    timestamps_used.add(timestamp)
+            
+            # If we need more frames, fill in with uniform sampling
+            if len(selected_frames) < max_frames:
+                remaining = max_frames - len(selected_frames)
+                
+                # Find frames that aren't too close to the ones we already have
+                uniform_indices = []
+                for i in range(remaining):
+                    idx = int(i * frame_count / remaining)
+                    ts = idx / fps if fps > 0 else 0
+                    
+                    # Skip if this timestamp is too close to one we already selected
+                    too_close = False
+                    for used_ts in timestamps_used:
+                        if abs(ts - used_ts) < 0.5:
+                            too_close = True
+                            break
+                            
+                    if not too_close:
+                        uniform_indices.append(idx)
+                
+                # Extract these additional frames
+                for idx in uniform_indices:
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+                    ret, frame = cap.read()
+                    
+                    if ret:
+                        timestamp = idx / fps if fps > 0 else 0
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        selected_frames.append((frame_rgb, timestamp, 0))
+            
+            # Sort all selected frames by timestamp
             selected_frames.sort(key=lambda x: x[1])
             
             # Extract just the frame and timestamp
             frames = [(frame, timestamp) for frame, timestamp, _ in selected_frames]
-            
-            # If we have too few frames from interesting points, add some regular samples
-            if len(frames) < max_frames * 0.7:
-                remaining = max_frames - len(frames)
-                regular_step = max(1, frame_count // remaining)
-                
-                frame_idx = 0
-                existing_timestamps = set(timestamp for _, timestamp in frames)
-                
-                while cap.isOpened() and len(frames) < max_frames:
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-                    
-                    timestamp = frame_idx / fps
-                    if frame_idx % regular_step == 0 and timestamp not in existing_timestamps:
-                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                        frames.append((frame_rgb, timestamp))
-                    
-                    frame_idx += 1
-                
-                # Sort frames by timestamp again
-                frames.sort(key=lambda x: x[1])
         
         cap.release()
         
@@ -730,8 +763,8 @@ class DeepfakeAnalyzer:
                     "confidence": confidence
                 })
                 
-                # Create timeline markers based on our new confidence interpretation
-                # Remember: higher confidence now means MORE authentic (LESS likely to be deepfake)
+                # Create timeline markers based on confidence scale
+                # Higher confidence = more authentic, Lower confidence = more likely deepfake
                 position = (timestamp / (total_frames / fps)) * 100 if fps > 0 else i * 10
                 
                 if confidence >= 0.9:
@@ -773,13 +806,19 @@ class DeepfakeAnalyzer:
             # Calculate overall statistics
             avg_confidence = np.mean(deepfake_scores)
             max_confidence = np.max(deepfake_scores)
-            deepfake_frame_count = sum(1 for score in deepfake_scores if score > 0.5)
             
-            # Determine if video is likely deepfake based on new confidence scale
-            # Remember: Lower confidence = more likely to be a deepfake
+            # CLARIFICATION: In our system, confidence score represents authenticity likelihood
+            # Higher confidence (closer to 1.0) = more likely to be authentic
+            # Lower confidence (closer to 0.0) = more likely to be a deepfake
+            
+            # Count frames with confidence below threshold (potential deepfakes)
+            deepfake_frame_count = sum(1 for score in deepfake_scores if score < 0.5)
+            
+            # Determine if video is likely deepfake based on confidence scale
+            # Lower average confidence = more likely to be a deepfake
             is_deepfake_overall = avg_confidence < 0.5
             
-            # Generate findings based on analysis with new confidence interpretation
+            # Generate findings based on analysis with confidence interpretation
             findings = []
             
             # Categorize the video based on the average confidence score
