@@ -12,8 +12,9 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import AnalyticsDashboard from "@/components/admin/analytics-dashboard";
 
-export default function AdminDeepfakeAnalytics() {
+export default function AdminAnalytics() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -95,7 +96,7 @@ export default function AdminDeepfakeAnalytics() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-1">Deepfake Analytics Dashboard</h1>
+              <h1 className="text-3xl font-bold mb-1">Analytics Dashboard</h1>
               <div className="flex items-center text-sm text-muted-foreground">
                 <span>Last updated: {formatLastUpdated()}</span>
               </div>
@@ -144,21 +145,8 @@ export default function AdminDeepfakeAnalytics() {
             </Card>
           </div>
           
-          {/* Message about advanced analytics */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Advanced Analytics</CardTitle>
-              <CardDescription>
-                Advanced deepfake analytics visualizations are currently being rebuilt and will be available soon.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Our development team is working on implementing enhanced data visualizations for deepfake detection metrics. 
-                This will include trend analysis, temporal patterns, and deepfake classification breakdowns.
-              </p>
-            </CardContent>
-          </Card>
+          {/* Analytics Dashboard */}
+          <AnalyticsDashboard />
         </div>
       </div>
     </div>
