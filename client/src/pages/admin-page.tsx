@@ -28,12 +28,6 @@ export default function AdminPage() {
 
   const adminSections = [
     {
-      title: "System Analytics",
-      description: "Monitor platform performance and usage statistics",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>,
-      path: "/admin/analytics"
-    },
-    {
       title: "Deepfake Analytics",
       description: "In-depth analysis of deepfake detection metrics",
       icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>,
