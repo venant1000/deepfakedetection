@@ -688,9 +688,18 @@ class DeepfakeAnalyzer:
         # Apply quality adjustment to confidence
         adjusted_confidence = raw_confidence * quality_factor
         
-        # Apply threshold for classification decision
-        confidence_threshold = 0.65  # Increased from 0.5 to reduce false positives
-        is_deepfake = adjusted_confidence > confidence_threshold
+        # New interpretation logic based on confidence score ranges:
+        # 90-100%: authentic
+        # 70-89%: probably authentic
+        # 50-69%: mixed indication
+        # 20-49%: possibly manipulation
+        # 0-19%: highly suspected deepfake
+        
+        # For the binary classification (is_deepfake flag)
+        # We'll use a threshold appropriate to the new scale
+        # Below 50% means some level of deepfake suspicion
+        confidence_threshold = 0.50
+        is_deepfake = adjusted_confidence < confidence_threshold
         
         return is_deepfake, adjusted_confidence
     
@@ -721,18 +730,44 @@ class DeepfakeAnalyzer:
                     "confidence": confidence
                 })
                 
-                # Create timeline markers for significant detections
-                if confidence > 0.7:
+                # Create timeline markers based on our new confidence interpretation
+                # Remember: higher confidence now means MORE authentic (LESS likely to be deepfake)
+                position = (timestamp / (total_frames / fps)) * 100 if fps > 0 else i * 10
+                
+                if confidence >= 0.9:
+                    # 90-100%: authentic
                     timeline_markers.append({
-                        "position": (timestamp / (total_frames / fps)) * 100,
-                        "tooltip": f"High deepfake probability: {confidence:.1%}",
+                        "position": position,
+                        "tooltip": f"Authentic content: {confidence:.1%}",
+                        "type": "normal"
+                    })
+                elif confidence >= 0.7:
+                    # 70-89%: probably authentic
+                    timeline_markers.append({
+                        "position": position,
+                        "tooltip": f"Probably authentic: {confidence:.1%}",
+                        "type": "normal"
+                    })
+                elif confidence >= 0.5:
+                    # 50-69%: mixed indication
+                    timeline_markers.append({
+                        "position": position,
+                        "tooltip": f"Mixed indicators: {confidence:.1%}",
+                        "type": "warning"
+                    })
+                elif confidence >= 0.2:
+                    # 20-49%: possibly manipulation
+                    timeline_markers.append({
+                        "position": position,
+                        "tooltip": f"Possible manipulation: {confidence:.1%}",
                         "type": "danger"
                     })
-                elif confidence > 0.4:
+                else:
+                    # 0-19%: highly suspected deepfake
                     timeline_markers.append({
-                        "position": (timestamp / (total_frames / fps)) * 100,
-                        "tooltip": f"Moderate deepfake probability: {confidence:.1%}",
-                        "type": "warning"
+                        "position": position,
+                        "tooltip": f"Likely deepfake: {confidence:.1%}",
+                        "type": "danger"
                     })
             
             # Calculate overall statistics
@@ -740,41 +775,84 @@ class DeepfakeAnalyzer:
             max_confidence = np.max(deepfake_scores)
             deepfake_frame_count = sum(1 for score in deepfake_scores if score > 0.5)
             
-            # Determine if video is likely deepfake
-            is_deepfake_overall = avg_confidence > 0.5 or max_confidence > 0.8
+            # Determine if video is likely deepfake based on new confidence scale
+            # Remember: Lower confidence = more likely to be a deepfake
+            is_deepfake_overall = avg_confidence < 0.5
             
-            # Generate findings based on analysis
+            # Generate findings based on analysis with new confidence interpretation
             findings = []
-            if max_confidence > 0.8:
+            
+            # Categorize the video based on the average confidence score
+            if avg_confidence >= 0.9:
+                # 90-100%: authentic
                 findings.append({
-                    "title": "High Confidence Deepfake Detection",
+                    "title": "Authentic Content Verified",
+                    "icon": "CheckCircle",
+                    "severity": "low",
+                    "timespan": f"Analysis of {len(frames)} frames",
+                    "description": f"Content appears authentic with {avg_confidence:.1%} confidence"
+                })
+            elif avg_confidence >= 0.7:
+                # 70-89%: probably authentic
+                findings.append({
+                    "title": "Likely Authentic Content",
+                    "icon": "ThumbsUp",
+                    "severity": "low",
+                    "timespan": f"Analysis of {len(frames)} frames",
+                    "description": f"Content probably authentic with {avg_confidence:.1%} confidence"
+                })
+            elif avg_confidence >= 0.5:
+                # 50-69%: mixed indication
+                findings.append({
+                    "title": "Mixed Authenticity Indicators",
+                    "icon": "AlertCircle",
+                    "severity": "medium",
+                    "timespan": f"Analysis of {len(frames)} frames",
+                    "description": f"Content shows some concerning patterns ({avg_confidence:.1%} authenticity confidence)"
+                })
+            elif avg_confidence >= 0.2:
+                # 20-49%: possibly manipulation
+                findings.append({
+                    "title": "Possible Manipulation Detected",
                     "icon": "AlertTriangle",
                     "severity": "high",
-                    "timespan": f"Peak at {frame_results[np.argmax(deepfake_scores)]['timestamp']:.1f}s",
-                    "description": f"Model detected deepfake indicators with {max_confidence:.1%} confidence"
+                    "timespan": f"Analysis of {len(frames)} frames",
+                    "description": f"Potential artificial manipulation detected ({avg_confidence:.1%} authenticity confidence)"
                 })
-            
-            if deepfake_frame_count > len(frames) * 0.3:
+            else:
+                # 0-19%: highly suspected deepfake
                 findings.append({
-                    "title": "Widespread Manipulation",
-                    "icon": "Eye",
-                    "severity": "medium",
-                    "timespan": f"{deepfake_frame_count}/{len(frames)} frames",
-                    "description": "Significant portion of video shows deepfake characteristics"
+                    "title": "Likely Deepfake Content",
+                    "icon": "AlertOctagon",
+                    "severity": "critical",
+                    "timespan": f"Analysis of {len(frames)} frames",
+                    "description": f"Strong indicators of artificial content ({avg_confidence:.1%} authenticity confidence)"
                 })
             
-            # Generate issues list
+            # Add finding for minimum confidence (most suspicious moment)
+            min_confidence = np.min(deepfake_scores)
+            min_idx = np.argmin(deepfake_scores)
+            if min_confidence < 0.3:
+                findings.append({
+                    "title": "Suspicious Segment Detected",
+                    "icon": "Zap",
+                    "severity": "high",
+                    "timespan": f"At {frame_results[min_idx]['timestamp']:.1f}s",
+                    "description": f"Highly suspicious frame with only {min_confidence:.1%} authenticity confidence"
+                })
+            
+            # Generate issues list with new confidence interpretation
             issues = []
             if is_deepfake_overall:
                 issues.append({
-                    "type": "deepfake",
-                    "text": f"Video shows signs of AI manipulation (confidence: {avg_confidence:.1%})"
+                    "type": "authenticity_concern",
+                    "text": f"Video shows signs of manipulation (authenticity score: {avg_confidence:.1%})"
                 })
             
-            if max_confidence > 0.9:
+            if min_confidence < 0.2:
                 issues.append({
-                    "type": "high_confidence",
-                    "text": f"Very high deepfake probability detected in some frames"
+                    "type": "critical_segment",
+                    "text": f"Highly suspicious segment detected at {frame_results[min_idx]['timestamp']:.1f}s"
                 })
             
             # Record which model type was used
