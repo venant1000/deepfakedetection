@@ -108,14 +108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       
-      // Fallback to sample video if no actual uploaded video is found
-      const samplePath = path.join(process.cwd(), 'public', 'sample.mp4');
-      if (fs.existsSync(samplePath)) {
-        fs.createReadStream(samplePath).pipe(res);
-      } else {
-        // Fallback to a simple message if no video is available
-        res.status(404).send("Video file not available");
-      }
+      // No fallback to sample video - only serve the actual uploaded video
+      res.status(404).send("Your uploaded video is not available for playback");
     } catch (error) {
       console.error("Error serving video file:", error);
       res.status(500).send("Error processing video request");
