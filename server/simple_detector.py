@@ -196,14 +196,20 @@ def analyze_video(video_path):
         # Create timeline markers based on frame-by-frame analysis
         timeline = []
         
-        # Create only 5 strategic markers at key positions (0%, 25%, 50%, 75%, 100%)
+        # Get the actual video duration from the last frame timestamp
+        video_duration = max(result["timestamp"] for result in frame_results) if frame_results else 0
+        
+        # Create only 5 strategic markers at key time positions
         marker_positions = [0, 0.25, 0.5, 0.75, 1.0]
         
         for pos_ratio in marker_positions:
-            # Find the closest frame index for this position
-            frame_index = int(pos_ratio * (len(frame_results) - 1))
-            result = frame_results[frame_index]
-            conf = result["confidence"]
+            # Calculate the target timestamp for this position
+            target_timestamp = pos_ratio * video_duration
+            
+            # Find the frame closest to this timestamp
+            closest_frame = min(frame_results, key=lambda x: abs(x["timestamp"] - target_timestamp))
+            conf = closest_frame["confidence"]
+            actual_timestamp = closest_frame["timestamp"]
             pos = int(pos_ratio * 100)  # Convert to position percentage
             
             # Adjust thresholds to match our classification scheme
@@ -211,19 +217,19 @@ def analyze_video(video_path):
             if conf < 0.5:
                 timeline.append({
                     "position": pos,
-                    "tooltip": f"High deepfake probability: {(1-conf):.1%}",
+                    "tooltip": f"High deepfake probability: {(1-conf):.1%} at {actual_timestamp:.1f}s",
                     "type": "danger"
                 })
             elif conf < 0.7:
                 timeline.append({
                     "position": pos,
-                    "tooltip": f"Moderate probability: {(1-conf):.1%}",
+                    "tooltip": f"Moderate probability: {(1-conf):.1%} at {actual_timestamp:.1f}s",
                     "type": "warning"
                 })
             else:
                 timeline.append({
                     "position": pos,
-                    "tooltip": f"Low deepfake probability: {(1-conf):.1%}",
+                    "tooltip": f"Low deepfake probability: {(1-conf):.1%} at {actual_timestamp:.1f}s",
                     "type": "normal"
                 })
         
