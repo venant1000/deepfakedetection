@@ -133,8 +133,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No video file provided" });
       }
 
-      // Generate a unique video ID
-      const videoId = `${Date.now()}-${req.user.id}-${Math.floor(Math.random() * 1000)}`;
+      // Generate a unique video ID with more randomness to prevent duplicate analysis
+      const videoId = `${Date.now()}-${req.user.id}-${Math.floor(Math.random() * 10000)}`;
       
       // Save video file temporarily for analysis
       const tempVideoPath = path.join(process.cwd(), 'uploads', `${videoId}.${req.file.originalname.split('.').pop()}`);
@@ -152,6 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let analysisData;
       try {
         console.log("Starting deepfake analysis for video:", tempVideoPath);
+        // Force a new analysis by adding a unique marker to ensure it doesn't reuse previous results
         analysisData = await runDeepfakeAnalysis(tempVideoPath);
         console.log("Analysis completed. Results:", JSON.stringify(analysisData, null, 2));
         
