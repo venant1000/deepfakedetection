@@ -69,11 +69,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
     {
       group: "Admin Portal",
       items: [
-        {
-          name: "Analytics Dashboard",
-          path: "/admin/analytics",
-          icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"/><path d="M7 14.5v1.25M12 9v6.75M17 12.5v3.25M7 11.5v-4M12 8v-3M17 10v-4"/></svg>
-        },
+
         {
           name: "Deepfake Analytics",
           path: "/admin/deepfake-analytics",
