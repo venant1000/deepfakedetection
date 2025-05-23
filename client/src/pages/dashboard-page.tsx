@@ -19,26 +19,25 @@ export default function DashboardPage() {
     return lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Handle manual refresh
+  // Handle manual refresh - reload the entire page to fetch fresh data
   const handleRefresh = async () => {
     setRefreshing(true);
     
     try {
-      // Simulate refresh delay and update timestamp
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLastUpdated(new Date());
-      
+      // Show immediate feedback
       toast({
-        title: "Dashboard refreshed",
-        description: "Your dashboard data has been updated.",
+        title: "Refreshing dashboard",
+        description: "Reloading all system data...",
       });
+      
+      // Reload the entire page to fetch fresh data from all components
+      window.location.reload();
     } catch (error) {
       toast({
         title: "Refresh failed",
         description: "Unable to refresh dashboard data. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setRefreshing(false);
     }
   };
