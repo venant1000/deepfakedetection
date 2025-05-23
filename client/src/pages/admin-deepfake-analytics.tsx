@@ -335,13 +335,13 @@ export default function AdminDeepfakeAnalytics() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
                   </span>
                 </div>
-                <CardTitle className="text-3xl font-bold">{analyticsData?.summary?.deepfakesDetected || 0}</CardTitle>
+                <CardTitle className="text-3xl font-bold">{analyticsData?.summary?.deepfakeCount || 0}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-muted-foreground flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 mr-1"><path d="m18 15-6-6-6 6"/></svg>
-                    <span className="text-green-500">+{analyticsData?.summary?.deepfakesDetected || 0}</span>
+                    <span className="text-green-500">+{analyticsData?.summary?.deepfakeCount || 0}</span>
                     <span className="ml-1">since last week</span>
                   </div>
                   <Badge variant="outline" className="text-xs border-secondary/30 text-secondary">
