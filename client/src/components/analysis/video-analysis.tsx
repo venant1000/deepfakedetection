@@ -490,9 +490,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
                       {marker.tooltip}
                     </div>
                     
-                    <div className="text-xs text-muted-foreground mb-2">
-                      Timestamp: {markerTimestamp}
-                    </div>
+
                     
                     {marker.analysis ? (
                       <div className="text-xs bg-black/20 p-3 rounded my-2 border-l-2 border-primary/50">
