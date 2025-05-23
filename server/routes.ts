@@ -91,20 +91,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set proper content type for video response
       res.setHeader('Content-Type', 'video/mp4');
       
-      // Check if we have the video stored in uploads directory (this is where we save uploaded videos)
-      const uploadedVideoPath = path.join(process.cwd(), 'uploads', `${videoId}.mp4`);
+      // Check if we have the video stored in the viewing directory (this is where we save uploaded videos for playback)
+      const viewingVideoPath = path.join(process.cwd(), 'uploads', 'viewing', `${videoId}.mp4`);
       
-      // If the original uploaded video exists, serve that
-      if (fs.existsSync(uploadedVideoPath)) {
-        fs.createReadStream(uploadedVideoPath).pipe(res);
+      // If the viewing video exists, serve that
+      if (fs.existsSync(viewingVideoPath)) {
+        fs.createReadStream(viewingVideoPath).pipe(res);
         return;
       }
       
-      // Otherwise, look for temporary file saved during analysis
-      const tempVideoPath = path.join(process.cwd(), 'uploads', `${videoId}.${videoAnalysis.fileName.split('.').pop()}`);
+      // Fallback: check old upload directory (for backward compatibility)
+      const uploadedVideoPath = path.join(process.cwd(), 'uploads', `${videoId}.mp4`);
       
-      if (fs.existsSync(tempVideoPath)) {
-        fs.createReadStream(tempVideoPath).pipe(res);
+      if (fs.existsSync(uploadedVideoPath)) {
+        fs.createReadStream(uploadedVideoPath).pipe(res);
         return;
       }
       
@@ -145,8 +145,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
       
-      // Write the uploaded video to temporary file - this will be deleted after analysis
+      // Write the uploaded video to temporary file for analysis
       fs.writeFileSync(tempVideoPath, req.file.buffer);
+      
+      // Also save a permanent copy for viewing (different location to prevent bias)
+      const viewingVideoPath = path.join(process.cwd(), 'uploads', 'viewing', `${videoId}.mp4`);
+      const viewingDir = path.dirname(viewingVideoPath);
+      if (!fs.existsSync(viewingDir)) {
+        fs.mkdirSync(viewingDir, { recursive: true });
+      }
+      fs.writeFileSync(viewingVideoPath, req.file.buffer);
       
       // Run PyTorch deepfake analysis
       let analysisData;
@@ -156,24 +164,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         analysisData = await runDeepfakeAnalysis(tempVideoPath);
         console.log("Analysis completed. Results:", JSON.stringify(analysisData, null, 2));
         
-        // Delete the video file after analysis to prevent bias
+        // Delete the temporary analysis file after analysis to prevent bias
         try {
           fs.unlinkSync(tempVideoPath);
-          console.log(`Video file ${tempVideoPath} has been analyzed and deleted to prevent bias`);
+          console.log(`Temporary analysis file ${tempVideoPath} has been deleted to prevent bias`);
+          console.log(`Video preserved for viewing at: ${viewingVideoPath}`);
         } catch (deleteError) {
-          console.error(`Failed to delete video file: ${deleteError}`);
+          console.error(`Failed to delete temporary analysis file: ${deleteError}`);
         }
         
         if (analysisData.error) {
           throw new Error(analysisData.error);
         }
       } catch (error) {
-        // Delete the video file even if analysis fails
+        // Delete the temporary analysis file even if analysis fails (but keep viewing copy)
         try {
           fs.unlinkSync(tempVideoPath);
-          console.log(`Video file deleted after failed analysis`);
+          console.log(`Temporary analysis file deleted after failed analysis`);
         } catch (deleteError) {
-          console.error(`Failed to delete video file: ${deleteError}`);
+          console.error(`Failed to delete temporary analysis file: ${deleteError}`);
         }
         
         console.error("Deepfake analysis failed:", error);
