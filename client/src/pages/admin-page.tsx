@@ -102,7 +102,7 @@ export default function AdminPage() {
         
         {/* Admin Menu Cards */}
         <h2 className="text-xl font-semibold mt-8 mb-4">Admin Controls</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {adminSections.map((section, index) => (
             <Card key={index} className="hover:border-primary/50 transition-colors cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
