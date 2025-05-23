@@ -155,8 +155,10 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
     }
   }, [isPlaying, totalSeconds]);
 
+  // With native controls, we don't need to manually handle play/pause
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    // This function is kept for compatibility but no longer needed
+    // as we're using native video controls now
   };
 
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -184,10 +186,15 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
         <div>
           <h3 className="text-lg font-medium mb-3">Original Video</h3>
           <div className="aspect-video rounded-lg bg-black flex items-center justify-center relative overflow-hidden">
-            {/* Actual video player */}
+            {/* Actual video player with enhanced controls */}
             <video 
               className="w-full h-full object-contain"
               src={analysis.videoUrl}
+              controls
+              controlsList="nodownload" 
+              disablePictureInPicture={false}
+              playsInline
+              preload="metadata"
               ref={(video) => {
                 if (video) {
                   video.addEventListener('loadedmetadata', () => {
@@ -213,60 +220,7 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
               onClick={handlePlayPause}
             />
             
-            {/* Playback controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 glass-dark">
-              <div className="flex items-center gap-3">
-                <button className="text-white" onClick={(e) => {
-                  e.stopPropagation();
-                  handlePlayPause();
-                  
-                  // Play/pause the actual video
-                  const parentDiv = e.currentTarget.parentElement;
-                  const videoContainer = parentDiv ? parentDiv.parentElement : null;
-                  const videoElement = videoContainer ? videoContainer.querySelector('video') : null;
-                  
-                  if (videoElement) {
-                    if (isPlaying) {
-                      videoElement.pause();
-                    } else {
-                      videoElement.play().catch(e => console.error('Error playing video:', e));
-                    }
-                  }
-                }}>
-                  {isPlaying ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  )}
-                </button>
-                
-                <div 
-                  className="h-1 bg-muted flex-grow rounded-full relative cursor-pointer" 
-                  ref={timelineRef}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleTimelineClick(e);
-                    
-                    // Get video element using a more reliable approach
-                    const parentDiv = e.currentTarget.parentElement;
-                    const videoContainer = parentDiv ? parentDiv.parentElement : null;
-                    const videoElement = videoContainer ? videoContainer.querySelector('video') : null;
-                    
-                    if (videoElement && timelineRef.current) {
-                      const rect = timelineRef.current.getBoundingClientRect();
-                      const clickPosition = e.clientX - rect.left;
-                      const newPosition = (clickPosition / rect.width);
-                      videoElement.currentTime = newPosition * videoElement.duration;
-                    }
-                  }}
-                >
-                  <div 
-                    className="h-1 bg-primary rounded-full absolute top-0 left-0" 
-                    style={{ width: `${progressPosition}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
+            {/* Removed custom controls - now using native video controls */}
           </div>
         </div>
         
