@@ -265,8 +265,6 @@ export default function VideoAnalysis({ analysis }: VideoAnalysisProps) {
                     style={{ width: `${progressPosition}%` }}
                   ></div>
                 </div>
-                
-                <span className="text-sm text-white">{currentTime} / {totalDuration}</span>
               </div>
             </div>
           </div>
