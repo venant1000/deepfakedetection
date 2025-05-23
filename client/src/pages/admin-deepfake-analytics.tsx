@@ -367,22 +367,26 @@ export default function AdminDeepfakeAnalytics() {
                 </CardContent>
               </Card>
               
-              {/* Deepfake Categories Chart */}
+              {/* Detection Results Distribution Chart */}
               <Card className="border-0 shadow-md">
                 <CardHeader>
-                  <CardTitle>Deepfake Categories</CardTitle>
-                  <CardDescription>Distribution by manipulation type</CardDescription>
+                  <CardTitle>Detection Results Distribution</CardTitle>
+                  <CardDescription>Real vs Deepfake detection results</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="h-80 p-6">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={analyticsData?.detectionTypes || [
-                            { name: "Facial Manipulation", value: 45 },
-                            { name: "Voice Synthesis", value: 20 },
-                            { name: "Body Movements", value: 15 },
-                            { name: "Background Alterations", value: 10 }
+                          data={[
+                            { 
+                              name: "Authentic Videos", 
+                              value: analyticsData?.summary?.videoCount ? analyticsData.summary.videoCount - analyticsData.summary.deepfakeCount : 0
+                            },
+                            { 
+                              name: "Deepfake Detected", 
+                              value: analyticsData?.summary?.deepfakeCount || 0 
+                            }
                           ]}
                           nameKey="name"
                           dataKey="value"
@@ -394,9 +398,8 @@ export default function AdminDeepfakeAnalytics() {
                           label={(entry) => entry.name}
                           labelLine={{ stroke: "#555" }}
                         >
-                          {(analyticsData?.detectionTypes || []).map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
+                          <Cell fill={colors.success} />
+                          <Cell fill={colors.error} />
                         </Pie>
                         <Tooltip 
                           contentStyle={{ background: '#171717', border: '1px solid #333', borderRadius: '6px' }}
