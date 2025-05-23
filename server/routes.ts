@@ -151,10 +151,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Also save a permanent copy for viewing (different location to prevent bias)
       const viewingVideoPath = path.join(process.cwd(), 'uploads', 'viewing', `${videoId}.mp4`);
       const viewingDir = path.dirname(viewingVideoPath);
+      console.log("Creating viewing directory:", viewingDir);
       if (!fs.existsSync(viewingDir)) {
         fs.mkdirSync(viewingDir, { recursive: true });
+        console.log("Viewing directory created successfully");
       }
+      console.log("Saving viewing copy to:", viewingVideoPath);
       fs.writeFileSync(viewingVideoPath, req.file.buffer);
+      console.log("Viewing copy saved successfully, file size:", fs.statSync(viewingVideoPath).size, "bytes");
       
       // Run PyTorch deepfake analysis
       let analysisData;
