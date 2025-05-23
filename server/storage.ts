@@ -373,7 +373,9 @@ export class SQLiteStorage implements IStorage {
     if (!existingAdmin) {
       const hashedPassword = createHash('sha256').update('admin').digest('hex');
       this.db.prepare("INSERT INTO users (username, password) VALUES (?, ?)").run("admin", hashedPassword);
-      console.log("Created default admin user");
+      console.log("Created default admin user with username: admin and password: admin");
+    } else {
+      console.log("Admin user already exists");
     }
   }
 
@@ -391,8 +393,12 @@ export class SQLiteStorage implements IStorage {
     const { username, password } = insertUser;
     const hashedPassword = createHash('sha256').update(password).digest('hex');
     
-    const result = this.db.prepare("INSERT INTO users (username, password) VALUES (?, ?) RETURNING *").get(username, hashedPassword) as User;
-    return result;
+    const stmt = this.db.prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+    const result = stmt.run(username, hashedPassword);
+    
+    // Get the created user
+    const newUser = this.db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid) as User;
+    return newUser;
   }
 
   async getAllUsers(): Promise<User[]> {
