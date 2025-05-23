@@ -8,6 +8,7 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { randomBytes, createHash } from "crypto";
 import fs from "fs";
+import Database from "better-sqlite3";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -307,4 +308,219 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// SQLite Storage Implementation
+export class SQLiteStorage implements IStorage {
+  private db: Database.Database;
+  public sessionStore: session.Store;
+  private lastCacheCleared: Date | null = null;
+
+  constructor() {
+    // Initialize SQLite database
+    this.db = new Database('./data.db');
+    
+    // Create tables
+    this.initializeTables();
+    
+    // Create session store
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // Prune expired entries every 24h
+    });
+    
+    // Create default admin user if it doesn't exist
+    this.initializeDefaultAdmin();
+  }
+
+  private initializeTables() {
+    // Users table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Video analyses table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS video_analyses (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        file_name TEXT NOT NULL,
+        upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        file_size INTEGER,
+        analysis TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `);
+
+    // System logs table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS system_logs (
+        id TEXT PRIMARY KEY,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        type TEXT NOT NULL,
+        source TEXT NOT NULL,
+        message TEXT NOT NULL,
+        details TEXT
+      )
+    `);
+  }
+
+  private initializeDefaultAdmin() {
+    const existingAdmin = this.db.prepare("SELECT * FROM users WHERE username = ?").get("admin");
+    
+    if (!existingAdmin) {
+      const hashedPassword = createHash('sha256').update('admin').digest('hex');
+      this.db.prepare("INSERT INTO users (username, password) VALUES (?, ?)").run("admin", hashedPassword);
+      console.log("Created default admin user");
+    }
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const user = this.db.prepare("SELECT * FROM users WHERE id = ?").get(id) as User | undefined;
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const user = this.db.prepare("SELECT * FROM users WHERE username = ?").get(username) as User | undefined;
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const { username, password } = insertUser;
+    const hashedPassword = createHash('sha256').update(password).digest('hex');
+    
+    const result = this.db.prepare("INSERT INTO users (username, password) VALUES (?, ?) RETURNING *").get(username, hashedPassword) as User;
+    return result;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const users = this.db.prepare("SELECT * FROM users").all() as User[];
+    return users;
+  }
+
+  async getUserCount(): Promise<number> {
+    const result = this.db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
+    return result.count;
+  }
+
+  async saveVideoAnalysis(id: string, userId: number, analysis: any): Promise<void> {
+    const analysisJson = JSON.stringify(analysis);
+    this.db.prepare("INSERT OR REPLACE INTO video_analyses (id, user_id, file_name, file_size, analysis) VALUES (?, ?, ?, ?, ?)")
+      .run(id, userId, analysis.fileName || 'unknown', analysis.fileSize || 0, analysisJson);
+  }
+
+  async getVideoAnalysis(id: string, userId: number): Promise<VideoAnalysisResult | undefined> {
+    const row = this.db.prepare("SELECT * FROM video_analyses WHERE id = ? AND user_id = ?").get(id, userId) as any;
+    
+    if (!row) return undefined;
+    
+    const analysis = JSON.parse(row.analysis);
+    return {
+      id: row.id,
+      fileName: row.file_name,
+      userId: row.user_id,
+      uploadDate: row.upload_date,
+      fileSize: row.file_size,
+      analysis
+    };
+  }
+
+  async getUserVideoAnalyses(userId: number): Promise<VideoAnalysisResult[]> {
+    const rows = this.db.prepare("SELECT * FROM video_analyses WHERE user_id = ? ORDER BY upload_date DESC").all(userId) as any[];
+    
+    return rows.map(row => ({
+      id: row.id,
+      fileName: row.file_name,
+      userId: row.user_id,
+      uploadDate: row.upload_date,
+      fileSize: row.file_size,
+      analysis: JSON.parse(row.analysis)
+    }));
+  }
+
+  async getVideoCount(): Promise<number> {
+    const result = this.db.prepare("SELECT COUNT(*) as count FROM video_analyses").get() as { count: number };
+    return result.count;
+  }
+
+  async getDeepfakeCount(): Promise<number> {
+    const rows = this.db.prepare("SELECT analysis FROM video_analyses").all() as { analysis: string }[];
+    
+    let deepfakeCount = 0;
+    for (const row of rows) {
+      try {
+        const analysis = JSON.parse(row.analysis);
+        if (analysis.isDeepfake) {
+          deepfakeCount++;
+        }
+      } catch (error) {
+        // Skip invalid JSON
+      }
+    }
+    
+    return deepfakeCount;
+  }
+
+  async getSystemLogs(): Promise<SystemLog[]> {
+    const logs = this.db.prepare("SELECT * FROM system_logs ORDER BY timestamp DESC LIMIT 100").all() as SystemLog[];
+    return logs;
+  }
+
+  async addSystemLog(log: Omit<SystemLog, 'id' | 'timestamp'>): Promise<SystemLog> {
+    const id = `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const timestamp = new Date().toISOString();
+    
+    const newLog: SystemLog = {
+      id,
+      timestamp,
+      ...log
+    };
+    
+    this.db.prepare("INSERT INTO system_logs (id, timestamp, type, source, message, details) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(id, timestamp, log.type, log.source, log.message, log.details || '');
+    
+    return newLog;
+  }
+
+  async clearVideoCache(): Promise<{ deletedCount: number, totalSize: number }> {
+    const videoCount = await this.getVideoCount();
+    const estimatedSize = videoCount * 15; // Size in MB
+    
+    // Clear video analyses from database
+    this.db.prepare("DELETE FROM video_analyses").run();
+    
+    // Log this operation
+    await this.addSystemLog({
+      type: 'info',
+      source: 'storage',
+      message: `Cleared video cache: ${videoCount} records deleted`,
+      details: `Freed approximately ${estimatedSize} MB of estimated disk space`
+    });
+    
+    this.lastCacheCleared = new Date();
+    
+    return {
+      deletedCount: videoCount,
+      totalSize: estimatedSize
+    };
+  }
+  
+  getLastCacheClearTime(): Date | null {
+    return this.lastCacheCleared;
+  }
+  
+  async getCacheInfo(): Promise<{ videoCount: number, estimatedSize: number, lastCleared: Date | null }> {
+    const videoCount = await this.getVideoCount();
+    const estimatedSize = videoCount * 15; // Rough estimate: 15MB per video
+    
+    return {
+      videoCount,
+      estimatedSize,
+      lastCleared: this.lastCacheCleared
+    };
+  }
+}
+
+export const storage = new SQLiteStorage();
