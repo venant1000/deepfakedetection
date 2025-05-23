@@ -276,28 +276,7 @@ export default function AdminDeepfakeAnalytics() {
                 </Select>
               </div>
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="ml-auto">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Export Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    Export as PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    Export as CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    Export as Excel
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+
             </div>
           </div>
           
