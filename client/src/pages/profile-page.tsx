@@ -335,19 +335,7 @@ export default function ProfilePage() {
                       </p>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <textarea 
-                        id="bio" 
-                        name="bio"
-                        value={profileData.bio}
-                        onChange={handleInputChange}
-                        className="w-full p-2 rounded-md glass-dark border border-muted focus:ring-1 focus:ring-primary min-h-[120px]"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Tell us a bit about yourself and your interest in deepfake detection.
-                      </p>
-                    </div>
+                    
                     
                     <div className="space-y-2">
                       <Label htmlFor="organization">Organization</Label>
