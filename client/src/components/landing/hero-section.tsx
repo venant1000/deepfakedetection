@@ -13,7 +13,7 @@ export default function HeroSection() {
               <span className="gradient-text">Detect Deepfakes</span> With Advanced AI Technology
             </h1>
             <p className="text-lg text-muted-foreground">
-              DeepGuard AI uses Google's Gemini AI to analyze videos, detect manipulation, and protect against misinformation in real-time.
+              Advanced AI technology to analyze videos and detect manipulation with precision and reliability.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button 
