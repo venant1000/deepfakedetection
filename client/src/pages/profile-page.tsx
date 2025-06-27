@@ -532,33 +532,7 @@ export default function ProfilePage() {
                       Manage account security features
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="twoFactorAuth">Two-Factor Authentication</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Add an extra layer of security to your account
-                        </p>
-                      </div>
-                      <Switch 
-                        id="twoFactorAuth" 
-                        checked={securitySettings.twoFactorAuth}
-                        onCheckedChange={(checked) => 
-                          setSecuritySettings(prev => ({ ...prev, twoFactorAuth: checked }))
-                        }
-                      />
-                    </div>
-                    
-                    <Separator />
-                    
-                    <Button variant="outline" className="w-full">
-                      Export Account Data
-                    </Button>
-                    
-                    <Button variant="destructive" className="w-full">
-                      Delete Account
-                    </Button>
-                  </CardContent>
+                  
                 </Card>
               </div>
             </div>
