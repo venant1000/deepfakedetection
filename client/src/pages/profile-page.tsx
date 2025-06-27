@@ -317,23 +317,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="flex items-center">
-                        Email Address
-                        {formErrors.email && <span className="text-red-500 ml-2 text-xs">{formErrors.email}</span>}
-                      </Label>
-                      <Input 
-                        id="email" 
-                        name="email"
-                        type="email"
-                        value={profileData.email}
-                        onChange={handleInputChange}
-                        className={formErrors.email ? "border-red-500 focus:ring-red-500" : ""}
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        We'll use this email for notifications and account recovery.
-                      </p>
-                    </div>
+                    
                     
                     
                     
