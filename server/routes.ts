@@ -40,6 +40,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from public directory
   app.use('/public', express.static('public'));
 
+  // File download endpoint for app files
+  app.get("/api/download/:type", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const downloadType = req.params.type;
+      const userId = req.user.id;
+
+      switch (downloadType) {
+        case 'all-analyses':
+          // Download all user's analyses as JSON
+          const analyses = await storage.getUserVideoAnalyses(userId);
+          const analysesData = JSON.stringify(analyses, null, 2);
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Content-Disposition', `attachment; filename="all-analyses-${userId}.json"`);
+          res.send(analysesData);
+          break;
+
+        case 'analyses-csv':
+          // Download analyses as CSV
+          const csvAnalyses = await storage.getUserVideoAnalyses(userId);
+          if (csvAnalyses.length === 0) {
+            return res.status(404).json({ message: "No analyses found" });
+          }
+          
+          const csvHeaders = ["ID", "File Name", "Upload Date", "File Size (KB)", "Is Deepfake", "Confidence", "Processing Time"];
+          const csvRows = csvAnalyses.map(analysis => [
+            analysis.id,
+            analysis.fileName,
+            analysis.uploadDate,
+            analysis.fileSize || 0,
+            analysis.analysis.isDeepfake ? "Yes" : "No",
+            (analysis.analysis.confidence * 100).toFixed(1) + "%",
+            analysis.analysis.processingTime + "ms"
+          ]);
+          
+          const csvContent = [csvHeaders, ...csvRows].map(row => row.join(",")).join("\n");
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', `attachment; filename="analyses-${userId}.csv"`);
+          res.send(csvContent);
+          break;
+
+        case 'system-logs':
+          // Admin only - download system logs
+          if (!req.user.username.includes("admin")) {
+            return res.status(403).json({ message: "Admin access required" });
+          }
+          
+          const logs = await storage.getSystemLogs();
+          const logsData = JSON.stringify(logs, null, 2);
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Content-Disposition', 'attachment; filename="system-logs.json"');
+          res.send(logsData);
+          break;
+
+        default:
+          res.status(400).json({ message: "Invalid download type" });
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+      res.status(500).json({ 
+        message: "Failed to process download",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Function to run deepfake analysis using Python model
   async function runDeepfakeAnalysis(videoPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
