@@ -347,19 +347,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="website" className="flex items-center">
-                        Website
-                        {formErrors.website && <span className="text-red-500 ml-2 text-xs">{formErrors.website}</span>}
-                      </Label>
-                      <Input 
-                        id="website" 
-                        name="website"
-                        value={profileData.website}
-                        onChange={handleInputChange}
-                        className={formErrors.website ? "border-red-500 focus:ring-red-500" : ""}
-                      />
-                    </div>
+                    
                   </CardContent>
                   <CardFooter className="flex justify-between border-t pt-6">
                     <Button 
