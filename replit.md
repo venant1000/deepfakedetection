@@ -6,6 +6,10 @@ DeepGuard AI is a web application for deepfake detection and analysis. The platf
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+- Removed download functionality from dashboard and backend endpoints (June 27, 2025)
+- User requested removal of all download features including JSON/CSV export functionality
+
 ## System Architecture
 
 ### Frontend

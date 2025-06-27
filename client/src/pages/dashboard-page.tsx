@@ -6,16 +6,13 @@ import RecentAnalyses from "@/components/dashboard/recent-analyses";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Loader2, Download, FileText, FileSpreadsheet } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { apiRequest } from "@/lib/queryClient";
+import { RefreshCw, Loader2 } from "lucide-react";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [downloading, setDownloading] = useState<string | null>(null);
 
   // Format date for display
   const formatLastUpdated = () => {
@@ -45,52 +42,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Handle file downloads
-  const handleDownload = async (downloadType: string, fileName: string) => {
-    setDownloading(downloadType);
-    
-    try {
-      // Make the download request
-      const response = await fetch(`/api/download/${downloadType}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Download failed');
-      }
-
-      // Get the blob data
-      const blob = await response.blob();
-      
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Download successful",
-        description: `${fileName} has been downloaded.`,
-      });
-    } catch (error) {
-      console.error('Download error:', error);
-      toast({
-        title: "Download failed",
-        description: error instanceof Error ? error.message : "Unable to download file",
-        variant: "destructive",
-      });
-    } finally {
-      setDownloading(null);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,66 +90,6 @@ export default function DashboardPage() {
         </div>
         
         <StatsOverview />
-        
-        {/* Download Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Download Your Data
-            </CardTitle>
-            <CardDescription>
-              Export your analysis data and reports for backup or external use
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                onClick={() => handleDownload('all-analyses', `all-analyses-${user?.username}.json`)}
-                disabled={downloading === 'all-analyses'}
-                className="flex items-center gap-2 h-12"
-              >
-                {downloading === 'all-analyses' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileText className="h-4 w-4" />
-                )}
-                Download All Analyses (JSON)
-              </Button>
-              
-              <Button
-                onClick={() => handleDownload('analyses-csv', `analyses-${user?.username}.csv`)}
-                disabled={downloading === 'analyses-csv'}
-                variant="outline"
-                className="flex items-center gap-2 h-12"
-              >
-                {downloading === 'analyses-csv' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileSpreadsheet className="h-4 w-4" />
-                )}
-                Download Analyses (CSV)
-              </Button>
-              
-              {user?.username?.includes('admin') && (
-                <Button
-                  onClick={() => handleDownload('system-logs', 'system-logs.json')}
-                  disabled={downloading === 'system-logs'}
-                  variant="secondary"
-                  className="flex items-center gap-2 h-12 md:col-span-2"
-                >
-                  {downloading === 'system-logs' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="h-4 w-4" />
-                  )}
-                  Download System Logs (Admin Only)
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
         <RecentAnalyses />
       </div>
     </div>
