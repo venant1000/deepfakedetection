@@ -337,15 +337,7 @@ export default function ProfilePage() {
                     
                     
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="organization">Organization</Label>
-                      <Input 
-                        id="organization" 
-                        name="organization"
-                        value={profileData.organization}
-                        onChange={handleInputChange}
-                      />
-                    </div>
+                    
                     
                     
                   </CardContent>
