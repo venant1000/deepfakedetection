@@ -84,27 +84,7 @@ export default function HeroSection() {
           </div>
         </div>
         
-        {/* Stats Bar */}
-        <div className="mt-20 glass rounded-xl p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold gradient-text">99.4%</p>
-              <p className="text-muted-foreground mt-2">Detection Accuracy</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold gradient-text">5M+</p>
-              <p className="text-muted-foreground mt-2">Videos Analyzed</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold gradient-text">97%</p>
-              <p className="text-muted-foreground mt-2">User Satisfaction</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold gradient-text">3s</p>
-              <p className="text-muted-foreground mt-2">Avg. Analysis Time</p>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </section>
   );
