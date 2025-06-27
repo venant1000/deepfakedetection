@@ -33,6 +33,15 @@ export default function Navigation() {
         </div>
         
         <div className="hidden md:flex space-x-8 items-center">
+          {navItems.map((item, index) => (
+            <a 
+              key={index} 
+              href={item.href} 
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              {item.label}
+            </a>
+          ))}
           
           {user ? (
             <Button
