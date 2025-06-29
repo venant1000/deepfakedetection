@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import Sidebar from "@/components/layout/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   Card,
   CardContent,
@@ -46,6 +47,7 @@ interface AnalysisItem {
 export default function HistoryPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [resultFilter, setResultFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
@@ -206,27 +208,38 @@ export default function HistoryPage() {
             <p className="text-muted-foreground">View your past video analyses and results</p>
           </div>
           
-          <Button 
-            className="bg-gradient-to-r from-primary to-secondary text-black"
-            onClick={handleExportHistory}
-            disabled={isLoading || analysisHistory.length === 0}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading...
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" x2="12" y1="15" y2="3"/>
-                </svg>
-                Export History
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => navigate("/upload")}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Upload New Video
+            </Button>
+            
+            <Button 
+              className="bg-gradient-to-r from-primary to-secondary text-black"
+              onClick={handleExportHistory}
+              disabled={isLoading || analysisHistory.length === 0}
+              variant="outline"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" x2="12" y1="15" y2="3"/>
+                  </svg>
+                  Export History
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}

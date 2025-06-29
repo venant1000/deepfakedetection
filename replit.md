@@ -9,6 +9,8 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 - Removed download functionality from dashboard and backend endpoints (June 27, 2025)
 - User requested removal of all download features including JSON/CSV export functionality
+- Fixed upload functionality to support multiple video uploads without upload button disappearing (June 27, 2025)
+- Added "Upload New Video" buttons to Recent Analyses section and History page for easier access (June 27, 2025)
 
 ## System Architecture
 

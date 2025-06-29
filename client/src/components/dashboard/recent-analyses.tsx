@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { VideoAnalysisResult } from "@shared/schema";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 
@@ -75,7 +75,17 @@ export default function RecentAnalyses() {
     <div className="glass rounded-xl p-6 mb-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Recent Analyses</h2>
-        <Link href="/history" className="text-primary text-sm hover:underline">View All</Link>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => navigate("/upload")}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Upload New Video
+          </Button>
+          <Link href="/history" className="text-primary text-sm hover:underline">View All</Link>
+        </div>
       </div>
       
       <div className="overflow-x-auto">
