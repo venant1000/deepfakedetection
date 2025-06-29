@@ -103,8 +103,8 @@ export default function AdminStats() {
           <line x1="6" y1="18" x2="6.01" y2="18" />
         </svg>
       ),
-      bgColor: "bg-green-500/20",
-      textColor: "text-green-400"
+      bgColor: "bg-green-600/20",
+      textColor: "text-green-600"
     }
   ];
 

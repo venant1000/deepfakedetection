@@ -251,7 +251,7 @@ export default function UploadPage() {
             
             {uploadStatus === "success" && (
               <div className="text-center py-8">
-                <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-600" />
                 <h3 className="text-lg font-medium mb-2">Upload Successful!</h3>
                 <p className="text-muted-foreground mb-6">
                   Your video has been uploaded and is being analyzed.

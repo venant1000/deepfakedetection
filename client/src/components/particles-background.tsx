@@ -22,7 +22,7 @@ export default function ParticlesBackground() {
             key={i}
             className="absolute rounded-full"
             style={{
-              backgroundColor: i % 3 === 0 ? "#00ff88" : i % 3 === 1 ? "#7000ff" : "#0088ff",
+              backgroundColor: i % 3 === 0 ? "#228B22" : i % 3 === 1 ? "#7000ff" : "#0088ff",
               width: `${dotSize}px`,
               height: `${dotSize}px`,
               top: topPos,

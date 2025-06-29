@@ -109,7 +109,7 @@ export default function HistoryPage() {
       case "deepfake":
         return <Badge variant="destructive">{result}</Badge>;
       case "authentic":
-        return <Badge variant="default" className="bg-green-500 hover:bg-green-600">{result}</Badge>;
+        return <Badge variant="default" className="bg-green-600 hover:bg-green-700">{result}</Badge>;
       case "inconclusive":
         return <Badge variant="secondary">{result}</Badge>;
       default:
