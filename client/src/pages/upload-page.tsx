@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
@@ -15,6 +15,21 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+  const [lastVideoId, setLastVideoId] = useState<string | null>(null);
+
+  // Reset upload state when component mounts or user returns to page
+  useEffect(() => {
+    const resetUploadState = () => {
+      setFile(null);
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadStatus("idle");
+      setLastVideoId(null);
+    };
+
+    // Reset state when component first mounts
+    resetUploadState();
+  }, []);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -103,12 +118,10 @@ export default function UploadPage() {
         description: "Your video has been uploaded and is being analyzed",
       });
       
-      // Redirect to analysis page after 1.5 seconds
+      // Store video ID for potential navigation, but don't auto-redirect
       if (data.videoId) {
-        setTimeout(() => {
-          console.log("Redirecting to:", `/analysis/${data.videoId}`);
-          navigate(`/analysis/${data.videoId}`);
-        }, 1500);
+        setLastVideoId(data.videoId);
+        setUploadStatus("success");
       } else {
         toast({
           title: "Error with analysis",
@@ -241,8 +254,31 @@ export default function UploadPage() {
                 <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <h3 className="text-lg font-medium mb-2">Upload Successful!</h3>
                 <p className="text-muted-foreground mb-6">
-                  Redirecting to analysis...
+                  Your video has been uploaded and is being analyzed.
                 </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {lastVideoId && (
+                    <Button 
+                      onClick={() => navigate(`/analysis/${lastVideoId}`)}
+                      className="px-6"
+                    >
+                      View Analysis Results
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={() => {
+                      setFile(null);
+                      setIsUploading(false);
+                      setUploadProgress(0);
+                      setUploadStatus("idle");
+                      setLastVideoId(null);
+                    }}
+                    variant="outline"
+                    className="px-6"
+                  >
+                    Upload Another Video
+                  </Button>
+                </div>
               </div>
             )}
             
@@ -254,7 +290,13 @@ export default function UploadPage() {
                   There was an error uploading your video. Please try again.
                 </p>
                 <Button 
-                  onClick={() => setUploadStatus("idle")}
+                  onClick={() => {
+                    setFile(null);
+                    setIsUploading(false);
+                    setUploadProgress(0);
+                    setUploadStatus("idle");
+                    setLastVideoId(null);
+                  }}
                   variant="outline"
                 >
                   Try Again
